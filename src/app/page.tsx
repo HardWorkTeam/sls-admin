@@ -136,13 +136,6 @@ export default function Home() {
               />
 
               <button
-                type="button"
-                className="mb-1 self-end border-none bg-transparent text-sm text-[#05603a]"
-              >
-                Forgot Password?
-              </button>
-
-              <button
                 type="submit"
                 className="mt-1 h-11 rounded-[22px] border-none bg-gradient-to-b from-[#16b364] to-[#027a48] text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-75"
                 disabled={isLoading}
