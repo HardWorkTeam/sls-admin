@@ -1,65 +1,41 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { apiErrorMessage } from "@/lib/api";
+import { useLogin } from "@/hooks/use-auth";
+import { useAuthStore } from "@/stores/auth-store";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api";
-const heroImageUrl =
-  "https://www.figma.com/api/mcp/asset/c7b28969-21be-408e-94b5-fe767ae4290d";
-
-type LoginResponse = {
-  message: string;
-  token: string;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-  };
-};
+const heroImageUrl = "/login-hero.jpg";
 
 export default function Home() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const router = useRouter();
+  const token = useAuthStore((state) => state.token);
+  const login = useLogin();
+  const isLoading = login.isPending;
+
+  useEffect(() => {
+    if (token) {
+      router.replace("/dashboard");
+    }
+  }, [token, router]);
+
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsLoading(true);
     setError(null);
     setStatus(null);
 
     try {
-      const response = await fetch(`${apiUrl}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const result = (await response.json()) as Partial<LoginResponse> & {
-        message?: string;
-      };
-
-      if (!response.ok) {
-        throw new Error(result.message ?? "Login failed");
-      }
-
-      if (result.token) {
-        localStorage.setItem("admin_auth_token", result.token);
-      }
-
+      const result = await login.mutateAsync({ email, password });
       setStatus(`Welcome back, ${result.user?.name ?? "Admin"}!`);
+      router.replace("/dashboard");
     } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "Unable to login right now",
-      );
-    } finally {
-      setIsLoading(false);
+      setError(apiErrorMessage(submitError));
     }
   };
 
