@@ -41,6 +41,20 @@ export function useTemplates() {
   });
 }
 
+export function useIncome(params: { status?: string; page?: number } = {}) {
+  return useQuery({
+    queryKey: ["admin", "income", params],
+    queryFn: () => adminService.income(params),
+  });
+}
+
+export function useIncomeSummary() {
+  return useQuery({
+    queryKey: ["admin", "income", "summary"],
+    queryFn: () => adminService.incomeSummary(),
+  });
+}
+
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -4,6 +4,8 @@ import type {
   InvitationTemplate,
   Package,
   Paginated,
+  PlatformIncome,
+  PlatformIncomeSummary,
   Role,
   User,
 } from "@/types/api";
@@ -64,6 +66,22 @@ export const adminService = {
 
   async templates(): Promise<InvitationTemplate[]> {
     const { data } = await api.get<{ data: InvitationTemplate[] }>("/templates");
+    return data.data;
+  },
+
+  async income(
+    params: { status?: string; page?: number; per_page?: number } = {},
+  ): Promise<Paginated<PlatformIncome>> {
+    const { data } = await api.get<Paginated<PlatformIncome>>("/admin/income", {
+      params,
+    });
+    return data;
+  },
+
+  async incomeSummary(): Promise<PlatformIncomeSummary> {
+    const { data } = await api.get<{ data: PlatformIncomeSummary }>(
+      "/admin/income/summary",
+    );
     return data.data;
   },
 };

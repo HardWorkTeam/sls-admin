@@ -2,6 +2,7 @@
 
 import {
   CalendarHeart,
+  DollarSign,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/weddings", label: "Weddings", icon: CalendarHeart },
   { href: "/users", label: "Users & Roles", icon: Users, role: "super_admin" },
+  { href: "/income", label: "Platform Income", icon: DollarSign, role: "super_admin" },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 

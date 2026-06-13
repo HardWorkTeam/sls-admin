@@ -212,6 +212,53 @@ export interface GiftSummary {
   by_type: Record<GiftType, { count: number; amount: number }>;
 }
 
+export type ExpenseStatus = "planned" | "partial" | "paid";
+
+export interface Expense {
+  id: number;
+  wedding_id: number;
+  item_name: string;
+  vendor: string | null;
+  amount: number;
+  paid_amount: number;
+  status: ExpenseStatus;
+  note: string | null;
+  spent_at: string | null;
+}
+
+export interface ExpenseSummary {
+  total_expenses: number;
+  total_amount: number;
+  total_paid: number;
+  total_outstanding: number;
+  by_status: Record<ExpenseStatus, { count: number; amount: number }>;
+}
+
+export interface PlatformIncome {
+  event_id: number;
+  wedding_code: string;
+  event_name: string;
+  event_status: string;
+  user_id: number | null;
+  user_name: string | null;
+  package_name: string | null;
+  amount: number;
+  currency: string;
+  purchased_at: string | null;
+}
+
+export interface PlatformIncomeSummary {
+  total_income: number;
+  total_subscriptions: number;
+  currency: string;
+  by_package: Array<{
+    package_id: number | null;
+    package_name: string;
+    count: number;
+    amount: number;
+  }>;
+}
+
 export type TimelineCategory =
   | "engagement"
   | "ceremony"

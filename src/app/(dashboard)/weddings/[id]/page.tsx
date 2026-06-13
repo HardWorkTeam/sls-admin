@@ -8,6 +8,7 @@ import { Badge, statusVariant } from "@/components/ui/badge";
 import { PageLoader } from "@/components/ui/spinner";
 import { TabPanel, Tabs } from "@/components/ui/tabs";
 import { AnnouncementsTab } from "@/components/wedding/announcements-tab";
+import { ExpensesTab } from "@/components/wedding/expenses-tab";
 import { GalleryTab } from "@/components/wedding/gallery-tab";
 import { GiftsTab } from "@/components/wedding/gifts-tab";
 import { GuestsTab } from "@/components/wedding/guests-tab";
@@ -25,6 +26,7 @@ const TABS = [
   { value: "rsvp", label: "RSVP" },
   { value: "seating", label: "Seating" },
   { value: "gifts", label: "Gifts" },
+  { value: "expenses", label: "Expenses" },
   { value: "timeline", label: "Timeline" },
   { value: "gallery", label: "Gallery" },
   { value: "announcements", label: "Announcements" },
@@ -88,6 +90,9 @@ export default function WeddingDetailPage() {
       </TabPanel>
       <TabPanel active={tab === "gifts"}>
         <GiftsTab weddingId={weddingId} />
+      </TabPanel>
+      <TabPanel active={tab === "expenses"}>
+        <ExpensesTab weddingId={weddingId} />
       </TabPanel>
       <TabPanel active={tab === "timeline"}>
         <TimelineTab weddingId={weddingId} />
