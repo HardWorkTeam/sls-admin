@@ -10,6 +10,23 @@ import type {
   User,
 } from "@/types/api";
 
+export interface PackagePayload {
+  name?: string;
+  description?: string | null;
+  price?: number | null;
+  currency?: string | null;
+  features?: string[];
+  is_active?: boolean;
+}
+
+export interface TemplatePayload {
+  slug?: string;
+  name?: string;
+  preview_image_path?: string | null;
+  config?: Record<string, unknown> | null;
+  is_active?: boolean;
+}
+
 export const adminService = {
   async dashboard(): Promise<DashboardOverview> {
     const { data } = await api.get<{ data: DashboardOverview }>("/dashboard/overview");
@@ -64,9 +81,52 @@ export const adminService = {
     return data.data;
   },
 
+  async createPackage(payload: PackagePayload): Promise<Package> {
+    const { data } = await api.post<{ data: Package }>("/packages", payload);
+    return data.data;
+  },
+
+  async updatePackage(
+    packageId: number,
+    payload: PackagePayload,
+  ): Promise<Package> {
+    const { data } = await api.put<{ data: Package }>(
+      `/packages/${packageId}`,
+      payload,
+    );
+    return data.data;
+  },
+
+  async removePackage(packageId: number): Promise<void> {
+    await api.delete(`/packages/${packageId}`);
+  },
+
   async templates(): Promise<InvitationTemplate[]> {
     const { data } = await api.get<{ data: InvitationTemplate[] }>("/templates");
     return data.data;
+  },
+
+  async createTemplate(payload: TemplatePayload): Promise<InvitationTemplate> {
+    const { data } = await api.post<{ data: InvitationTemplate }>(
+      "/templates",
+      payload,
+    );
+    return data.data;
+  },
+
+  async updateTemplate(
+    templateId: number,
+    payload: TemplatePayload,
+  ): Promise<InvitationTemplate> {
+    const { data } = await api.put<{ data: InvitationTemplate }>(
+      `/templates/${templateId}`,
+      payload,
+    );
+    return data.data;
+  },
+
+  async removeTemplate(templateId: number): Promise<void> {
+    await api.delete(`/templates/${templateId}`);
   },
 
   async income(

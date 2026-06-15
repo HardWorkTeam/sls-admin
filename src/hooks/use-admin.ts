@@ -84,3 +84,63 @@ export function useDeleteUser() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "users"] }),
   });
 }
+
+export function useCreatePackage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminService.createPackage,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["packages"] }),
+  });
+}
+
+export function useUpdatePackage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      packageId,
+      payload,
+    }: {
+      packageId: number;
+      payload: Parameters<typeof adminService.updatePackage>[1];
+    }) => adminService.updatePackage(packageId, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["packages"] }),
+  });
+}
+
+export function useDeletePackage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (packageId: number) => adminService.removePackage(packageId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["packages"] }),
+  });
+}
+
+export function useCreateTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: adminService.createTemplate,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["templates"] }),
+  });
+}
+
+export function useUpdateTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      templateId,
+      payload,
+    }: {
+      templateId: number;
+      payload: Parameters<typeof adminService.updateTemplate>[1];
+    }) => adminService.updateTemplate(templateId, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["templates"] }),
+  });
+}
+
+export function useDeleteTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (templateId: number) => adminService.removeTemplate(templateId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["templates"] }),
+  });
+}
