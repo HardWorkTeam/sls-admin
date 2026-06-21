@@ -7,6 +7,7 @@ import type {
   PlatformIncome,
   PlatformIncomeSummary,
   Role,
+  Subscription,
   User,
 } from "@/types/api";
 
@@ -141,6 +142,24 @@ export const adminService = {
   async incomeSummary(): Promise<PlatformIncomeSummary> {
     const { data } = await api.get<{ data: PlatformIncomeSummary }>(
       "/admin/income/summary",
+    );
+    return data.data;
+  },
+
+  async subscriptions(
+    params: { status?: string; page?: number } = {},
+  ): Promise<Paginated<Subscription>> {
+    const { data } = await api.get<Paginated<Subscription>>(
+      "/admin/subscriptions",
+      { params },
+    );
+    return data;
+  },
+
+  async confirmSubscription(id: number, paid: boolean): Promise<Subscription> {
+    const { data } = await api.post<{ data: Subscription }>(
+      `/admin/subscriptions/${id}/confirm`,
+      { paid },
     );
     return data.data;
   },

@@ -55,6 +55,25 @@ export function useIncomeSummary() {
   });
 }
 
+export function useSubscriptions(params: { status?: string; page?: number } = {}) {
+  return useQuery({
+    queryKey: ["admin", "subscriptions", params],
+    queryFn: () => adminService.subscriptions(params),
+  });
+}
+
+export function useConfirmSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, paid }: { id: number; paid: boolean }) =>
+      adminService.confirmSubscription(id, paid),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "income"] });
+    },
+  });
+}
+
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
