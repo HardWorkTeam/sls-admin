@@ -1,13 +1,11 @@
 import { api } from "@/lib/api";
 import type {
   DashboardOverview,
-  InvitationTemplate,
   Package,
   Paginated,
   PlatformIncome,
   PlatformIncomeSummary,
   Role,
-  Subscription,
   User,
 } from "@/types/api";
 
@@ -20,13 +18,6 @@ export interface PackagePayload {
   is_active?: boolean;
 }
 
-export interface TemplatePayload {
-  slug?: string;
-  name?: string;
-  preview_image_path?: string | null;
-  config?: Record<string, unknown> | null;
-  is_active?: boolean;
-}
 
 export const adminService = {
   async dashboard(): Promise<DashboardOverview> {
@@ -102,34 +93,6 @@ export const adminService = {
     await api.delete(`/packages/${packageId}`);
   },
 
-  async templates(): Promise<InvitationTemplate[]> {
-    const { data } = await api.get<{ data: InvitationTemplate[] }>("/templates");
-    return data.data;
-  },
-
-  async createTemplate(payload: TemplatePayload): Promise<InvitationTemplate> {
-    const { data } = await api.post<{ data: InvitationTemplate }>(
-      "/templates",
-      payload,
-    );
-    return data.data;
-  },
-
-  async updateTemplate(
-    templateId: number,
-    payload: TemplatePayload,
-  ): Promise<InvitationTemplate> {
-    const { data } = await api.put<{ data: InvitationTemplate }>(
-      `/templates/${templateId}`,
-      payload,
-    );
-    return data.data;
-  },
-
-  async removeTemplate(templateId: number): Promise<void> {
-    await api.delete(`/templates/${templateId}`);
-  },
-
   async income(
     params: { status?: string; page?: number; per_page?: number } = {},
   ): Promise<Paginated<PlatformIncome>> {
@@ -146,21 +109,4 @@ export const adminService = {
     return data.data;
   },
 
-  async subscriptions(
-    params: { status?: string; page?: number } = {},
-  ): Promise<Paginated<Subscription>> {
-    const { data } = await api.get<Paginated<Subscription>>(
-      "/admin/subscriptions",
-      { params },
-    );
-    return data;
-  },
-
-  async confirmSubscription(id: number, paid: boolean): Promise<Subscription> {
-    const { data } = await api.post<{ data: Subscription }>(
-      `/admin/subscriptions/${id}/confirm`,
-      { paid },
-    );
-    return data.data;
-  },
 };

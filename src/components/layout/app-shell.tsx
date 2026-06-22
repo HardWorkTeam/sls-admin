@@ -2,10 +2,8 @@
 
 import {
   CalendarHeart,
-  CreditCard,
   DollarSign,
   LayoutDashboard,
-  LayoutTemplate,
   LogOut,
   Menu,
   Package as PackageIcon,
@@ -26,9 +24,7 @@ const NAV_ITEMS = [
   { href: "/weddings", label: "Weddings", icon: CalendarHeart },
   { href: "/users", label: "Users & Roles", icon: Users, role: "super_admin" },
   { href: "/income", label: "Platform Income", icon: DollarSign, role: "super_admin" },
-  { href: "/payments", label: "Payments", icon: CreditCard, role: "super_admin" },
   { href: "/packages", label: "Packages", icon: PackageIcon, role: "super_admin" },
-  { href: "/templates", label: "Templates", icon: LayoutTemplate, role: "super_admin" },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 

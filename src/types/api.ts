@@ -54,31 +54,6 @@ export interface Package {
   is_active: boolean;
 }
 
-export type SubscriptionStatus = "pending" | "submitted" | "paid" | "cancelled";
-
-export interface Subscription {
-  id: number;
-  wedding_id: number;
-  package_id: number;
-  package_name: string | null;
-  amount: number;
-  currency: string;
-  status: SubscriptionStatus;
-  payment_method: string | null;
-  payment_reference: string | null;
-  submitted_at: string | null;
-  paid_at: string | null;
-  wedding?: Wedding | null;
-}
-
-export interface InvitationTemplate {
-  id: number;
-  slug: string;
-  name: string;
-  preview_image_path: string | null;
-  config: Record<string, unknown> | null;
-  is_active: boolean;
-}
 
 export interface WeddingMember {
   id: number;
@@ -129,7 +104,6 @@ export interface Invitation {
   status: InvitationStatus;
   published_at: string | null;
   public_url: string;
-  template?: InvitationTemplate | null;
   guests_count?: number;
   rsvp_responses_count?: number;
   created_at?: string;

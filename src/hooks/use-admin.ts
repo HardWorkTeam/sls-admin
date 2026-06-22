@@ -33,14 +33,6 @@ export function usePackages() {
   });
 }
 
-export function useTemplates() {
-  return useQuery({
-    queryKey: ["templates"],
-    queryFn: () => adminService.templates(),
-    staleTime: 5 * 60_000,
-  });
-}
-
 export function useIncome(params: { status?: string; page?: number } = {}) {
   return useQuery({
     queryKey: ["admin", "income", params],
@@ -52,25 +44,6 @@ export function useIncomeSummary() {
   return useQuery({
     queryKey: ["admin", "income", "summary"],
     queryFn: () => adminService.incomeSummary(),
-  });
-}
-
-export function useSubscriptions(params: { status?: string; page?: number } = {}) {
-  return useQuery({
-    queryKey: ["admin", "subscriptions", params],
-    queryFn: () => adminService.subscriptions(params),
-  });
-}
-
-export function useConfirmSubscription() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, paid }: { id: number; paid: boolean }) =>
-      adminService.confirmSubscription(id, paid),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "subscriptions"] });
-      queryClient.invalidateQueries({ queryKey: ["admin", "income"] });
-    },
   });
 }
 
@@ -134,32 +107,3 @@ export function useDeletePackage() {
   });
 }
 
-export function useCreateTemplate() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: adminService.createTemplate,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["templates"] }),
-  });
-}
-
-export function useUpdateTemplate() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      templateId,
-      payload,
-    }: {
-      templateId: number;
-      payload: Parameters<typeof adminService.updateTemplate>[1];
-    }) => adminService.updateTemplate(templateId, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["templates"] }),
-  });
-}
-
-export function useDeleteTemplate() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (templateId: number) => adminService.removeTemplate(templateId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["templates"] }),
-  });
-}
