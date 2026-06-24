@@ -83,6 +83,7 @@ export interface Wedding {
   published_at: string | null;
   completed_at: string | null;
   cancelled_at: string | null;
+  payment_status?: SubscriptionStatus | "unpaid";
   package?: Package | null;
   created_by?: User | null;
   members?: WeddingMember[];
@@ -94,16 +95,27 @@ export interface Wedding {
 
 export type InvitationStatus = "draft" | "published" | "archived";
 
+export interface InvitationTemplate {
+  id: number;
+  slug: string;
+  name: string;
+  preview_image_path?: string | null;
+  config?: Record<string, unknown> | null;
+  is_active?: boolean;
+}
+
 export interface Invitation {
   id: number;
   wedding_id: number;
   invitation_code: string;
+  invitation_template_id: number | null;
   title: string | null;
   cover_image_path: string | null;
   settings: Record<string, unknown> | null;
   status: InvitationStatus;
   published_at: string | null;
   public_url: string;
+  template?: Pick<InvitationTemplate, "id" | "slug" | "name"> | null;
   guests_count?: number;
   rsvp_responses_count?: number;
   created_at?: string;
@@ -225,6 +237,28 @@ export interface ExpenseSummary {
   by_status: Record<ExpenseStatus, { count: number; amount: number }>;
 }
 
+export type SubscriptionStatus = "pending" | "submitted" | "paid" | "rejected";
+
+export interface Subscription {
+  id: number;
+  wedding_id: number;
+  package_id: number | null;
+  package?: Package | null;
+  amount: number;
+  currency: string;
+  status: SubscriptionStatus;
+  payment_method: string | null;
+  payment_reference: string | null;
+  submitted_at: string | null;
+  paid_at: string | null;
+  created_at?: string;
+  // Flattened wedding context (admin list only).
+  wedding_code?: string;
+  wedding_name?: string;
+  couple?: string;
+  user_name?: string | null;
+}
+
 export interface PlatformIncome {
   event_id: number;
   wedding_code: string;
@@ -310,6 +344,27 @@ export interface Announcement {
   created_by?: User | null;
   notification_logs_count?: number;
   created_at?: string;
+}
+
+export interface PlatformAnalytics {
+  cards: {
+    total_registered_users: number;
+    total_weddings_created: number;
+    total_revenue: number;
+    active_selling_packages: number;
+  };
+  charts: {
+    revenue_trend: { date: string; total: number }[];
+    system_growth: { date: string; total: number }[];
+    package_sales: Array<{
+      package_id: number | null;
+      package_name: string;
+      count: number;
+      amount: number;
+    }>;
+    template_usage: { name: string; total: number }[];
+  };
+  currency: string;
 }
 
 export interface DashboardOverview {

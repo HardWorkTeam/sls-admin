@@ -20,6 +20,22 @@ import {
 import { useWeddings } from "@/hooks/use-weddings";
 import { formatDate } from "@/lib/utils";
 
+const PAYMENT_VARIANT: Record<string, "secondary" | "warning" | "success" | "destructive"> = {
+  paid: "success",
+  submitted: "warning",
+  pending: "secondary",
+  unpaid: "secondary",
+  rejected: "destructive",
+};
+
+const PAYMENT_LABELS: Record<string, string> = {
+  paid: "Paid",
+  submitted: "Awaiting",
+  pending: "Pending",
+  unpaid: "Unpaid",
+  rejected: "Rejected",
+};
+
 export default function WeddingsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -88,6 +104,7 @@ export default function WeddingsPage() {
                 <TableHead>Guests</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Package</TableHead>
+                <TableHead>Payment</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -115,6 +132,11 @@ export default function WeddingsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>{wedding.package?.name ?? "—"}</TableCell>
+                  <TableCell>
+                    <Badge variant={PAYMENT_VARIANT[wedding.payment_status ?? "unpaid"] ?? "secondary"}>
+                      {PAYMENT_LABELS[wedding.payment_status ?? "unpaid"] ?? "Unpaid"}
+                    </Badge>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

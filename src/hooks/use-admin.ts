@@ -10,6 +10,13 @@ export function useDashboardOverview() {
   });
 }
 
+export function usePlatformAnalytics() {
+  return useQuery({
+    queryKey: ["dashboard", "platform-analytics"],
+    queryFn: () => adminService.platformAnalytics(),
+  });
+}
+
 export function useUsers(params: { search?: string; role?: string; page?: number } = {}) {
   return useQuery({
     queryKey: ["admin", "users", params],
@@ -33,6 +40,14 @@ export function usePackages() {
   });
 }
 
+export function useTemplates() {
+  return useQuery({
+    queryKey: ["invitation-templates"],
+    queryFn: () => adminService.templates(),
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useIncome(params: { status?: string; page?: number } = {}) {
   return useQuery({
     queryKey: ["admin", "income", params],
@@ -44,6 +59,29 @@ export function useIncomeSummary() {
   return useQuery({
     queryKey: ["admin", "income", "summary"],
     queryFn: () => adminService.incomeSummary(),
+  });
+}
+
+export function useSubscriptions(
+  params: { status?: string; page?: number } = {},
+) {
+  return useQuery({
+    queryKey: ["admin", "subscriptions", params],
+    queryFn: () => adminService.subscriptions(params),
+  });
+}
+
+export function useConfirmSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ subscriptionId, paid }: { subscriptionId: number; paid: boolean }) =>
+      adminService.confirmSubscription(subscriptionId, paid),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "income"] });
+      queryClient.invalidateQueries({ queryKey: ["weddings"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 }
 

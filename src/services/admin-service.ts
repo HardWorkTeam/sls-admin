@@ -3,11 +3,18 @@ import type {
   DashboardOverview,
   Package,
   Paginated,
+  PlatformAnalytics,
+  InvitationTemplate,
   PlatformIncome,
   PlatformIncomeSummary,
   Role,
+  Subscription,
   User,
 } from "@/types/api";
+
+export interface SubscriptionPage extends Paginated<Subscription> {
+  summary?: { status_counts: Record<string, number> };
+}
 
 export interface PackagePayload {
   name?: string;
@@ -22,6 +29,13 @@ export interface PackagePayload {
 export const adminService = {
   async dashboard(): Promise<DashboardOverview> {
     const { data } = await api.get<{ data: DashboardOverview }>("/dashboard/overview");
+    return data.data;
+  },
+
+  async platformAnalytics(): Promise<PlatformAnalytics> {
+    const { data } = await api.get<{ data: PlatformAnalytics }>(
+      "/dashboard/platform-analytics",
+    );
     return data.data;
   },
 
@@ -73,6 +87,13 @@ export const adminService = {
     return data.data;
   },
 
+  async templates(): Promise<InvitationTemplate[]> {
+    const { data } = await api.get<{ data: InvitationTemplate[] }>(
+      "/invitation-templates",
+    );
+    return data.data;
+  },
+
   async createPackage(payload: PackagePayload): Promise<Package> {
     const { data } = await api.post<{ data: Package }>("/packages", payload);
     return data.data;
@@ -105,6 +126,26 @@ export const adminService = {
   async incomeSummary(): Promise<PlatformIncomeSummary> {
     const { data } = await api.get<{ data: PlatformIncomeSummary }>(
       "/admin/income/summary",
+    );
+    return data.data;
+  },
+
+  async subscriptions(
+    params: { status?: string; page?: number; per_page?: number } = {},
+  ): Promise<SubscriptionPage> {
+    const { data } = await api.get<SubscriptionPage>("/admin/subscriptions", {
+      params,
+    });
+    return data;
+  },
+
+  async confirmSubscription(
+    subscriptionId: number,
+    paid: boolean,
+  ): Promise<Subscription> {
+    const { data } = await api.post<{ data: Subscription }>(
+      `/admin/subscriptions/${subscriptionId}/confirm`,
+      { paid },
     );
     return data.data;
   },

@@ -10,9 +10,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageLoader } from "@/components/ui/spinner";
 import { StatCard } from "@/components/ui/stat-card";
 import { Badge, statusVariant } from "@/components/ui/badge";
+import { PlatformAnalytics } from "@/components/dashboard/platform-analytics";
 import { useDashboardOverview } from "@/hooks/use-admin";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function DashboardPage() {
+  const hasRole = useAuthStore((state) => state.hasRole);
+
+  // Super admins see platform-wide business analytics; organizers keep the
+  // wedding/RSVP-focused dashboard.
+  if (hasRole("super_admin")) {
+    return <PlatformAnalytics />;
+  }
+
+  return <OrganizerDashboard />;
+}
+
+function OrganizerDashboard() {
   const { data, isLoading, isError } = useDashboardOverview();
 
   if (isLoading) return <PageLoader label="Loading dashboard..." />;
