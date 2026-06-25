@@ -44,6 +44,20 @@ export interface AuthResponse {
 
 export type WeddingStatus = "draft" | "published" | "completed" | "cancelled";
 
+/**
+ * Structured definition of what a package unlocks. Modules are gated
+ * booleans; limits are caps where `null` means unlimited.
+ */
+export interface PlanCapabilities {
+  modules: {
+    seating: boolean;
+    gallery: boolean;
+    gifts: boolean;
+  };
+  guest_limit: number | null;
+  invitation_design_limit: number | null;
+}
+
 export interface Package {
   id: number;
   name: string;
@@ -51,6 +65,7 @@ export interface Package {
   price: number | null;
   currency: string | null;
   features: string[] | null;
+  capabilities?: PlanCapabilities;
   is_active: boolean;
 }
 

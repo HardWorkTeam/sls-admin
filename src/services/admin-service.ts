@@ -3,6 +3,7 @@ import type {
   DashboardOverview,
   Package,
   Paginated,
+  PlanCapabilities,
   PlatformAnalytics,
   InvitationTemplate,
   PlatformIncome,
@@ -22,6 +23,7 @@ export interface PackagePayload {
   price?: number | null;
   currency?: string | null;
   features?: string[];
+  capabilities?: PlanCapabilities;
   is_active?: boolean;
 }
 

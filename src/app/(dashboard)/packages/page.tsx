@@ -29,6 +29,11 @@ interface PackageForm {
   price: string;
   currency: string;
   features: string;
+  module_seating: boolean;
+  module_gallery: boolean;
+  module_gifts: boolean;
+  guest_limit: string;
+  design_limit: string;
   is_active: string;
 }
 
@@ -38,6 +43,11 @@ const EMPTY: PackageForm = {
   price: "",
   currency: "USD",
   features: "",
+  module_seating: false,
+  module_gallery: false,
+  module_gifts: false,
+  guest_limit: "",
+  design_limit: "",
   is_active: "true",
 };
 
@@ -62,12 +72,21 @@ export default function PackagesPage() {
 
   const openEdit = (pkg: Package) => {
     setEditing(pkg);
+    const caps = pkg.capabilities;
     form.reset({
       name: pkg.name,
       description: pkg.description ?? "",
       price: pkg.price != null ? String(pkg.price) : "",
       currency: pkg.currency ?? "USD",
       features: (pkg.features ?? []).join("\n"),
+      module_seating: caps?.modules.seating ?? false,
+      module_gallery: caps?.modules.gallery ?? false,
+      module_gifts: caps?.modules.gifts ?? false,
+      guest_limit: caps?.guest_limit != null ? String(caps.guest_limit) : "",
+      design_limit:
+        caps?.invitation_design_limit != null
+          ? String(caps.invitation_design_limit)
+          : "",
       is_active: pkg.is_active ? "true" : "false",
     });
     setError(null);
@@ -85,6 +104,18 @@ export default function PackagesPage() {
         .split("\n")
         .map((line) => line.trim())
         .filter(Boolean),
+      capabilities: {
+        modules: {
+          seating: values.module_seating,
+          gallery: values.module_gallery,
+          gifts: values.module_gifts,
+        },
+        // Blank = unlimited.
+        guest_limit: values.guest_limit ? Number(values.guest_limit) : null,
+        invitation_design_limit: values.design_limit
+          ? Number(values.design_limit)
+          : null,
+      },
       is_active: values.is_active === "true",
     };
     try {
@@ -220,7 +251,65 @@ export default function PackagesPage() {
           <div>
             <Label htmlFor="pkg-features">Features (one per line)</Label>
             <Textarea id="pkg-features" rows={4} {...form.register("features")} />
+            <p className="mt-1 text-xs text-zinc-400">
+              Shown on the plan card. The settings below are what actually gets
+              enforced.
+            </p>
           </div>
+
+          <div className="space-y-2 rounded-lg border border-zinc-200 p-3">
+            <p className="text-sm font-medium text-zinc-700">Included modules</p>
+            <div className="grid grid-cols-3 gap-2">
+              <label className="flex items-center gap-2 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600"
+                  {...form.register("module_seating")}
+                />
+                Seating
+              </label>
+              <label className="flex items-center gap-2 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600"
+                  {...form.register("module_gallery")}
+                />
+                Gallery
+              </label>
+              <label className="flex items-center gap-2 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600"
+                  {...form.register("module_gifts")}
+                />
+                Gift tracking
+              </label>
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div>
+                <Label htmlFor="pkg-guest-limit">Guest limit</Label>
+                <Input
+                  id="pkg-guest-limit"
+                  type="number"
+                  min="1"
+                  placeholder="Unlimited"
+                  {...form.register("guest_limit")}
+                />
+              </div>
+              <div>
+                <Label htmlFor="pkg-design-limit">Invitation designs</Label>
+                <Input
+                  id="pkg-design-limit"
+                  type="number"
+                  min="1"
+                  placeholder="Unlimited"
+                  {...form.register("design_limit")}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-zinc-400">Leave a limit blank for unlimited.</p>
+          </div>
+
           <div>
             <Label htmlFor="pkg-active">Status</Label>
             <Select id="pkg-active" {...form.register("is_active")}>
