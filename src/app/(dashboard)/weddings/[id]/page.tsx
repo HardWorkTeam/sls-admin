@@ -7,7 +7,6 @@ import { useState } from "react";
 import { Badge, statusVariant } from "@/components/ui/badge";
 import { PageLoader } from "@/components/ui/spinner";
 import { TabPanel, Tabs } from "@/components/ui/tabs";
-import { AnnouncementsTab } from "@/components/wedding/announcements-tab";
 import { ExpensesTab } from "@/components/wedding/expenses-tab";
 import { GalleryTab } from "@/components/wedding/gallery-tab";
 import { GiftsTab } from "@/components/wedding/gifts-tab";
@@ -29,7 +28,6 @@ const TABS = [
   { value: "expenses", label: "Expenses" },
   { value: "timeline", label: "Timeline" },
   { value: "gallery", label: "Gallery" },
-  { value: "announcements", label: "Announcements" },
 ];
 
 export default function WeddingDetailPage() {
@@ -99,9 +97,6 @@ export default function WeddingDetailPage() {
       </TabPanel>
       <TabPanel active={tab === "gallery"}>
         <GalleryTab weddingId={weddingId} />
-      </TabPanel>
-      <TabPanel active={tab === "announcements"}>
-        <AnnouncementsTab weddingId={weddingId} />
       </TabPanel>
     </div>
   );
