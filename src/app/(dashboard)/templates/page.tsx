@@ -101,7 +101,6 @@ const FALLBACK = {
 
 interface TemplateForm {
   name: string;
-  description: string;
   is_active: string;
 }
 
@@ -114,14 +113,13 @@ export default function TemplatesPage() {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<TemplateForm>({
-    defaultValues: { name: "", description: "", is_active: "true" },
+    defaultValues: { name: "", is_active: "true" },
   });
 
   const openEdit = (tpl: InvitationTemplate) => {
     setEditingTemplate(tpl);
     form.reset({
       name: tpl.name,
-      description: tpl.description ?? "",
       is_active: tpl.is_active ? "true" : "false",
     });
     setError(null);
@@ -136,7 +134,6 @@ export default function TemplatesPage() {
         templateId: editingTemplate.id,
         payload: {
           name: values.name,
-          description: values.description || null,
           is_active: values.is_active === "true",
         },
       });
@@ -273,15 +270,6 @@ export default function TemplatesPage() {
           <div>
             <Label htmlFor="tpl-name">Name</Label>
             <Input id="tpl-name" {...form.register("name", { required: true })} />
-          </div>
-          <div>
-            <Label htmlFor="tpl-description">Description</Label>
-            <Textarea
-              id="tpl-description"
-              rows={3}
-              placeholder="Short description of the template design"
-              {...form.register("description")}
-            />
           </div>
           <div>
             <Label htmlFor="tpl-active">Status</Label>
