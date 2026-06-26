@@ -32,6 +32,9 @@ interface PackageForm {
   module_seating: boolean;
   module_gallery: boolean;
   module_gifts: boolean;
+  module_expense: boolean;
+  module_rsvp: boolean;
+  module_timeline: boolean;
   guest_limit: string;
   design_limit: string;
   is_active: string;
@@ -46,6 +49,9 @@ const EMPTY: PackageForm = {
   module_seating: false,
   module_gallery: false,
   module_gifts: false,
+  module_expense: false,
+  module_rsvp: false,
+  module_timeline: false,
   guest_limit: "",
   design_limit: "",
   is_active: "true",
@@ -82,6 +88,9 @@ export default function PackagesPage() {
       module_seating: caps?.modules.seating ?? false,
       module_gallery: caps?.modules.gallery ?? false,
       module_gifts: caps?.modules.gifts ?? false,
+      module_expense: caps?.modules.expense ?? false,
+      module_rsvp: caps?.modules.rsvp ?? false,
+      module_timeline: caps?.modules.timeline ?? false,
       guest_limit: caps?.guest_limit != null ? String(caps.guest_limit) : "",
       design_limit:
         caps?.invitation_design_limit != null
@@ -109,12 +118,16 @@ export default function PackagesPage() {
           seating: values.module_seating,
           gallery: values.module_gallery,
           gifts: values.module_gifts,
+          expense: values.module_expense,
+          rsvp: values.module_rsvp,
+          timeline: values.module_timeline,
         },
-        // Blank = unlimited.
-        guest_limit: values.guest_limit ? Number(values.guest_limit) : null,
-        invitation_design_limit: values.design_limit
-          ? Number(values.design_limit)
-          : null,
+        // Blank = unlimited; an explicit 0 = none (feature included but no
+        // allowance, e.g. a Free plan with 0 invitation designs).
+        guest_limit:
+          values.guest_limit.trim() === "" ? null : Number(values.guest_limit),
+        invitation_design_limit:
+          values.design_limit.trim() === "" ? null : Number(values.design_limit),
       },
       is_active: values.is_active === "true",
     };
@@ -284,6 +297,30 @@ export default function PackagesPage() {
                 />
                 Gift tracking
               </label>
+              <label className="flex items-center gap-2 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600"
+                  {...form.register("module_expense")}
+                />
+                Expense tracking
+              </label>
+              <label className="flex items-center gap-2 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600"
+                  {...form.register("module_rsvp")}
+                />
+                RSVP dashboard
+              </label>
+              <label className="flex items-center gap-2 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600"
+                  {...form.register("module_timeline")}
+                />
+                Timeline
+              </label>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-1">
               <div>
@@ -291,7 +328,7 @@ export default function PackagesPage() {
                 <Input
                   id="pkg-guest-limit"
                   type="number"
-                  min="1"
+                  min="0"
                   placeholder="Unlimited"
                   {...form.register("guest_limit")}
                 />
@@ -301,13 +338,17 @@ export default function PackagesPage() {
                 <Input
                   id="pkg-design-limit"
                   type="number"
-                  min="1"
+                  min="0"
                   placeholder="Unlimited"
                   {...form.register("design_limit")}
                 />
               </div>
             </div>
-            <p className="text-xs text-zinc-400">Leave a limit blank for unlimited.</p>
+            <p className="text-xs text-zinc-400">
+              Leave a limit blank for unlimited, or enter 0 to include the
+              feature with no allowance (e.g. a Free plan with 0 invitation
+              designs).
+            </p>
           </div>
 
           <div>

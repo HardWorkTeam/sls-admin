@@ -2,8 +2,8 @@
 
 import { PageLoader } from "@/components/ui/spinner";
 import { useLogout, useMe } from "@/hooks/use-auth";
-import { cn } from "@/lib/utils";
 import { isAdminUser } from "@/lib/roles";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   CalendarHeart,
@@ -188,7 +188,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <img
               src="/srolanh-logo.png"
               alt="Srolanh Admin"
-              className="h-7 w-auto"
+              className="h-12 w-auto"
             />
           </button>
           <button
