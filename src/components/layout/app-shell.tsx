@@ -65,14 +65,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const sidebar = (
     <>
-      <div className="flex h-16 items-center gap-2 border-b border-zinc-100 px-5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-b from-[#16b364] to-[#027a48] text-sm font-bold text-white">
-          S
-        </span>
-        <div>
-          <p className="text-sm font-bold text-zinc-900">Srolanh</p>
-          <p className="text-[11px] text-zinc-500">Admin Portal</p>
-        </div>
+      <div className="flex h-16 items-center gap-2 border-b border-zinc-100 px-4">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/srolanh-logo.png"
+          alt="Srolanh — Digital Event Management"
+          className="h-9 w-auto shrink-0"
+        />
+        <span className="text-[11px] text-zinc-500">Admin Portal</span>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {navItems.map((item) => {
@@ -150,7 +150,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-label="Open menu"
           >
             <Menu className="h-6 w-6" />
-            <span className="text-sm font-bold text-emerald-800">Srolanh Admin</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/srolanh-logo.png"
+              alt="Srolanh Admin"
+              className="h-7 w-auto"
+            />
           </button>
           <button
             type="button"
