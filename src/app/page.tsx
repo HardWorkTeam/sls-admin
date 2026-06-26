@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiErrorMessage } from "@/lib/api";
+import { isAdminUser } from "@/lib/roles";
 import { useLogin } from "@/hooks/use-auth";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -16,14 +17,18 @@ export default function Home() {
 
   const router = useRouter();
   const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+  const clear = useAuthStore((state) => state.clear);
   const login = useLogin();
   const isLoading = login.isPending;
 
   useEffect(() => {
-    if (token) {
+    // Only auto-redirect authorized staff. A persisted couple (Bride/Groom)
+    // session is bounced and cleared by the AppShell guard.
+    if (token && isAdminUser(user)) {
       router.replace("/dashboard");
     }
-  }, [token, router]);
+  }, [token, user, router]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -32,6 +37,15 @@ export default function Home() {
 
     try {
       const result = await login.mutateAsync({ email, password });
+
+      // The login endpoint is shared with the couple portal, so the admin
+      // portal must reject Bride/Groom (couple) accounts itself.
+      if (!isAdminUser(result.user)) {
+        clear();
+        setError("This account is not authorized to access the admin portal.");
+        return;
+      }
+
       setStatus(`Welcome back, ${result.user?.name ?? "Admin"}!`);
       router.replace("/dashboard");
     } catch (submitError) {

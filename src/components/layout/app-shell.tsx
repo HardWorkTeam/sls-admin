@@ -3,6 +3,7 @@
 import { PageLoader } from "@/components/ui/spinner";
 import { useLogout, useMe } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { isAdminUser } from "@/lib/roles";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   CalendarHeart,
@@ -58,6 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const hasRole = useAuthStore((state) => state.hasRole);
+  const clear = useAuthStore((state) => state.clear);
   const logout = useLogout();
   const [hydrated, setHydrated] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -71,6 +73,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       router.replace("/");
     }
   }, [hydrated, token, router]);
+
+  // Bounce non-admin (Bride/Groom) accounts that reach the admin portal with a
+  // persisted session — once their profile loads and proves they lack an admin
+  // role, clear the session and send them back to the login screen.
+  useEffect(() => {
+    if (hydrated && token && user && !isAdminUser(user)) {
+      clear();
+      router.replace("/");
+    }
+  }, [hydrated, token, user, clear, router]);
 
   // Close the mobile drawer whenever the route changes.
   useEffect(() => setMobileNavOpen(false), [pathname]);
