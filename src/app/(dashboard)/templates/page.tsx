@@ -1,9 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageLoader } from "@/components/ui/spinner";
 import { useTemplates } from "@/hooks/use-admin";
+import { Dialog } from "@/components/ui/dialog";
+import { Eye, ExternalLink, Smartphone, Monitor } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { InvitationTemplate } from "@/types/api";
+
+const RSVP_URL = process.env.NEXT_PUBLIC_RSVP_URL ?? "http://localhost:3002";
 
 // Static visual config keyed by slug — mirrors the couple portal's
 // invitation editor (TemplatePicker) so the catalog looks identical.
@@ -88,6 +95,8 @@ const FALLBACK = {
 
 export default function TemplatesPage() {
   const { data: templates, isLoading } = useTemplates();
+  const [selectedTemplate, setSelectedTemplate] = useState<InvitationTemplate | null>(null);
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("mobile");
 
   return (
     <div className="space-y-5">
@@ -151,17 +160,140 @@ export default function TemplatesPage() {
                   </p>
                 </div>
 
-                {/* Slug — admin context */}
-                <p
-                  className="font-mono text-[10px]"
-                  style={{ color: v.descColor, opacity: 0.7 }}
+                {/* Footer section with slug & preview button */}
+                <div
+                  className="mt-2 flex items-center justify-between gap-2 border-t pt-3"
+                  style={{ borderColor: `${v.border}30` }}
                 >
-                  {tpl.slug}
-                </p>
+                  <p
+                    className="font-mono text-[10px]"
+                    style={{ color: v.descColor, opacity: 0.7 }}
+                  >
+                    {tpl.slug}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTemplate(tpl);
+                      setPreviewDevice("mobile");
+                    }}
+                    className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-semibold border transition-all cursor-pointer hover:opacity-80"
+                    style={{
+                      color: v.labelColor,
+                      borderColor: `${v.labelColor}60`,
+                      background: v.labelBg,
+                    }}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    Preview
+                  </button>
+                </div>
               </div>
             );
           })}
         </div>
+      )}
+
+      {/* Template Preview Dialog */}
+      {selectedTemplate && (
+        <Dialog
+          open={!!selectedTemplate}
+          onClose={() => setSelectedTemplate(null)}
+          title={`Preview: ${selectedTemplate.name}`}
+          className="max-w-5xl w-full h-[90vh] flex flex-col p-4 md:p-6 overflow-hidden"
+        >
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Toolbar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4 border-b border-zinc-100 pb-3">
+              {/* Device Switcher */}
+              <div className="flex items-center gap-1 bg-zinc-100 p-0.5 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setPreviewDevice("mobile")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer",
+                    previewDevice === "mobile"
+                      ? "bg-white text-zinc-950 shadow-sm"
+                      : "text-zinc-500 hover:text-zinc-800"
+                  )}
+                >
+                  <Smartphone className="h-3.5 w-3.5" />
+                  Mobile
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewDevice("desktop")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer",
+                    previewDevice === "desktop"
+                      ? "bg-white text-zinc-950 shadow-sm"
+                      : "text-zinc-500 hover:text-zinc-800"
+                  )}
+                >
+                  <Monitor className="h-3.5 w-3.5" />
+                  Desktop
+                </button>
+              </div>
+
+              {/* External link */}
+              <a
+                href={`${RSVP_URL}/preview/${selectedTemplate.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-sm transition-all hover:bg-zinc-50 cursor-pointer"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open in New Tab
+              </a>
+            </div>
+
+            {/* Preview Area */}
+            <div className="flex-1 flex items-center justify-center bg-zinc-900 rounded-xl p-4 overflow-hidden min-h-[400px]">
+              {previewDevice === "mobile" ? (
+                /* Phone Mockup */
+                <div className="relative w-[320px] h-[480px] sm:w-[340px] sm:h-[550px] md:w-[360px] md:h-[580px] rounded-[36px] border-[10px] border-zinc-950 bg-zinc-950 shadow-2xl overflow-hidden ring-1 ring-zinc-900/10">
+                  {/* Speaker/Notch */}
+                  <div className="absolute top-2 left-1/2 -translate-x-1/2 h-4 w-28 rounded-full bg-zinc-950 z-20 flex items-center justify-center">
+                    <div className="h-1.5 w-12 rounded-full bg-zinc-800/80" />
+                  </div>
+                  
+                  {/* Screen Container */}
+                  <div className="w-full h-full rounded-[26px] overflow-hidden bg-white">
+                    <iframe
+                      src={`${RSVP_URL}/preview/${selectedTemplate.slug}`}
+                      title={`Mobile preview of ${selectedTemplate.name}`}
+                      className="w-full h-full border-0 select-none"
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* Desktop Browser Mockup */
+                <div className="w-full h-full max-h-[580px] rounded-xl border border-zinc-850 bg-zinc-950 overflow-hidden shadow-inner flex flex-col">
+                  {/* Browser header bar */}
+                  <div className="flex items-center gap-2 px-4 py-2 border-b border-zinc-800 bg-zinc-900 select-none">
+                    <div className="flex gap-1.5">
+                      <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-yellow-500/70" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-green-500/70" />
+                    </div>
+                    <div className="flex-1 max-w-md mx-auto text-center">
+                      <div className="inline-block w-full rounded-md bg-zinc-800 px-3 py-0.5 text-[10px] text-zinc-500 font-mono overflow-hidden text-ellipsis whitespace-nowrap">
+                        {`${RSVP_URL}/preview/${selectedTemplate.slug}`}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Iframe */}
+                  <iframe
+                    src={`${RSVP_URL}/preview/${selectedTemplate.slug}`}
+                    title={`Desktop preview of ${selectedTemplate.name}`}
+                    className="w-full flex-1 border-0 bg-white"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </Dialog>
       )}
     </div>
   );
