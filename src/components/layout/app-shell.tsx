@@ -1,5 +1,9 @@
 "use client";
 
+import { PageLoader } from "@/components/ui/spinner";
+import { useLogout, useMe } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   CalendarHeart,
   CreditCard,
@@ -16,19 +20,35 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { PageLoader } from "@/components/ui/spinner";
-import { useLogout, useMe } from "@/hooks/use-auth";
-import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth-store";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/weddings", label: "Weddings", icon: CalendarHeart },
   { href: "/users", label: "Users & Roles", icon: Users, role: "super_admin" },
-  { href: "/income", label: "Platform Income", icon: DollarSign, role: "super_admin" },
-  { href: "/payments", label: "Payments", icon: CreditCard, role: "super_admin" },
-  { href: "/packages", label: "Packages", icon: PackageIcon, role: "super_admin" },
-  { href: "/templates", label: "Templates", icon: LayoutTemplate, role: "super_admin" },
+  {
+    href: "/income",
+    label: "Platform Income",
+    icon: DollarSign,
+    role: "super_admin",
+  },
+  {
+    href: "/payments",
+    label: "Payments",
+    icon: CreditCard,
+    role: "super_admin",
+  },
+  {
+    href: "/packages",
+    label: "Packages",
+    icon: PackageIcon,
+    role: "super_admin",
+  },
+  {
+    href: "/templates",
+    label: "Templates",
+    icon: LayoutTemplate,
+    role: "super_admin",
+  },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -70,7 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <img
           src="/srolanh-logo.png"
           alt="Srolanh — Digital Event Management"
-          className="h-9 w-auto shrink-0"
+          className="h-16 w-auto shrink-0"
         />
         <span className="text-[11px] text-zinc-500">Admin Portal</span>
       </div>
@@ -97,7 +117,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
       <div className="border-t border-zinc-100 p-3">
         <div className="mb-2 px-3">
-          <p className="truncate text-sm font-medium text-zinc-800">{user?.name}</p>
+          <p className="truncate text-sm font-medium text-zinc-800">
+            {user?.name}
+          </p>
           <p className="truncate text-xs text-zinc-500">{user?.email}</p>
         </div>
         <button
