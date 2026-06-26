@@ -117,6 +117,15 @@ export default function TemplatesPage() {
     defaultValues: { slug: "", name: "", is_active: "true" },
   });
 
+  // Valid slugs = the coded designs (VISUAL mirrors the RSVP TEMPLATE_REGISTRY).
+  // The template's own current slug is appended so a legacy/broken slug still
+  // shows in the dropdown and can be corrected.
+  const slugOptions = Array.from(
+    new Set(
+      [...Object.keys(VISUAL), editingTemplate?.slug].filter(Boolean) as string[],
+    ),
+  );
+
   const openEdit = (tpl: InvitationTemplate) => {
     setEditingTemplate(tpl);
     form.reset({
@@ -271,18 +280,24 @@ export default function TemplatesPage() {
       >
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
-            <Label htmlFor="tpl-slug">Slug</Label>
-            <Input
+            <Label htmlFor="tpl-slug">Slug (design)</Label>
+            <Select
               id="tpl-slug"
               className="font-mono"
-              {...form.register("slug", {
-                required: true,
-                pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-              })}
-            />
+              {...form.register("slug", { required: true })}
+            >
+              {slugOptions.map((slug) => (
+                <option key={slug} value={slug}>
+                  {slug}
+                  {VISUAL[slug] ? "" : "  (no design — will render empty)"}
+                </option>
+              ))}
+            </Select>
             <p className="mt-1 text-[11px] text-zinc-500">
-              Lowercase letters, numbers and hyphens. Must match the template folder
-              and registry key in the RSVP app.
+              The slug is the key the RSVP app uses to pick which design to render.
+              Only the coded designs are listed, so a template can never point at
+              an empty/non-existent design. Adding a brand-new slug requires a new
+              template folder + registry entry in the RSVP app.
             </p>
           </div>
           <div>
