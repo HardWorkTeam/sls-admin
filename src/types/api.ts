@@ -114,6 +114,7 @@ export interface InvitationTemplate {
   id: number;
   slug: string;
   name: string;
+  description: string | null;
   preview_image_path?: string | null;
   config?: Record<string, unknown> | null;
   is_active?: boolean;

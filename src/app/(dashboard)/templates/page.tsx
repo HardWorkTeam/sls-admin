@@ -1,10 +1,20 @@
 "use client";
 
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { PageLoader } from "@/components/ui/spinner";
-import { useTemplates } from "@/hooks/use-admin";
-import { Eye } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { useTemplates, useUpdateTemplate } from "@/hooks/use-admin";
+import { Eye, Pencil } from "lucide-react";
+import { apiErrorMessage } from "@/lib/api";
+import type { InvitationTemplate } from "@/types/api";
 
 const RSVP_URL = process.env.NEXT_PUBLIC_RSVP_URL ?? "http://localhost:3002";
 
@@ -20,7 +30,7 @@ const VISUAL: Record<
     labelBg: string;
     descColor: string;
     palette: string[];
-    description: string;
+    fallbackDescription: string;
   }
 > = {
   "royal-khmer-v1": {
@@ -30,7 +40,7 @@ const VISUAL: Record<
     labelBg: "rgba(201,168,76,0.12)",
     descColor: "#a8a29e",
     palette: ["#C9A84C", "#FAF6EF", "#2C1810"],
-    description: "Dark luxury. Gold shimmer, floating particles, cinematic reveals.",
+    fallbackDescription: "Dark luxury. Gold shimmer, floating particles, cinematic reveals.",
   },
   "angkor-heritage-v1": {
     bg: "#FFF8E8",
@@ -39,7 +49,7 @@ const VISUAL: Record<
     labelBg: "#fef3c7",
     descColor: "#78716c",
     palette: ["#D4A020", "#FFF3D0", "#5C3A00"],
-    description: "Angkor Wat illustration. Warm golden palette, falling petals.",
+    fallbackDescription: "Angkor Wat illustration. Warm golden palette, falling petals.",
   },
   "blue-botanical-v1": {
     bg: "#ffffff",
@@ -48,7 +58,7 @@ const VISUAL: Record<
     labelBg: "#eff6ff",
     descColor: "#78716c",
     palette: ["#2C3E56", "#6A8CB2", "#BEA56E"],
-    description: "Watercolor leaves. White clean design, gold ring, elegant serif.",
+    fallbackDescription: "Watercolor leaves. White clean design, gold ring, elegant serif.",
   },
   "phanaroth-luxury-v1": {
     bg: "#4A0404",
@@ -57,7 +67,7 @@ const VISUAL: Record<
     labelBg: "rgba(232,201,122,0.12)",
     descColor: "#f9a8a8",
     palette: ["#5C030C", "#E8C97A", "#FAF6EF"],
-    description: "Royal crimson. Sliding gates, falling rose petals, live wishes scroll.",
+    fallbackDescription: "Royal crimson. Sliding gates, falling rose petals, live wishes scroll.",
   },
   "butterfly-editorial-v1": {
     bg: "#FCFBF9",
@@ -66,7 +76,7 @@ const VISUAL: Record<
     labelBg: "rgba(197,160,89,0.10)",
     descColor: "#78716c",
     palette: ["#5A121D", "#F5E6E3", "#C5A059"],
-    description: "Luxury editorial. 3D butterflies, opening burgundy envelope, elegant scripts.",
+    fallbackDescription: "Luxury editorial. 3D butterflies, opening burgundy envelope, elegant scripts.",
   },
   "emerald-elegance-v1": {
     bg: "#0d1f0d",
@@ -75,7 +85,7 @@ const VISUAL: Record<
     labelBg: "rgba(201,168,76,0.10)",
     descColor: "#a8a29e",
     palette: ["#1a2818", "#c9a84c", "#f5f0e8"],
-    description: "Deep forest green. Botanical line art, gold accents, smooth parallax.",
+    fallbackDescription: "Deep forest green. Botanical line art, gold accents, smooth parallax.",
   },
 };
 
@@ -86,11 +96,55 @@ const FALLBACK = {
   labelBg: "#f3f4f6",
   descColor: "#6b7280",
   palette: ["#9ca3af"],
-  description: "",
+  fallbackDescription: "",
 };
+
+interface TemplateForm {
+  name: string;
+  description: string;
+  is_active: string;
+}
 
 export default function TemplatesPage() {
   const { data: templates, isLoading } = useTemplates();
+  const updateTemplate = useUpdateTemplate();
+
+  const [editingTemplate, setEditingTemplate] = useState<InvitationTemplate | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const form = useForm<TemplateForm>({
+    defaultValues: { name: "", description: "", is_active: "true" },
+  });
+
+  const openEdit = (tpl: InvitationTemplate) => {
+    setEditingTemplate(tpl);
+    form.reset({
+      name: tpl.name,
+      description: tpl.description ?? "",
+      is_active: tpl.is_active ? "true" : "false",
+    });
+    setError(null);
+    setEditDialogOpen(true);
+  };
+
+  const onSubmit = form.handleSubmit(async (values) => {
+    if (!editingTemplate) return;
+    setError(null);
+    try {
+      await updateTemplate.mutateAsync({
+        templateId: editingTemplate.id,
+        payload: {
+          name: values.name,
+          description: values.description || null,
+          is_active: values.is_active === "true",
+        },
+      });
+      setEditDialogOpen(false);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    }
+  });
 
   return (
     <div className="space-y-5">
@@ -112,13 +166,19 @@ export default function TemplatesPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {templates.map((tpl) => {
             const v = VISUAL[tpl.slug] ?? FALLBACK;
+            const description = tpl.description || v.fallbackDescription;
+
             return (
               <div
                 key={tpl.id}
                 className="relative flex flex-col justify-between gap-3 rounded-xl border-2 p-4 text-left"
-                style={{ background: v.bg, borderColor: `${v.border}66` }}
+                style={{
+                  background: v.bg,
+                  borderColor: `${v.border}66`,
+                  opacity: tpl.is_active === false ? 0.6 : 1,
+                }}
               >
-                {!tpl.is_active ? (
+                {tpl.is_active === false ? (
                   <span className="absolute right-2 top-2">
                     <Badge variant="secondary">Inactive</Badge>
                   </span>
@@ -150,11 +210,11 @@ export default function TemplatesPage() {
 
                   {/* Description */}
                   <p className="text-[11px] leading-relaxed" style={{ color: v.descColor }}>
-                    {v.description}
+                    {description}
                   </p>
                 </div>
 
-                {/* Footer section with slug & preview button */}
+                {/* Footer section with slug & buttons */}
                 <div
                   className="mt-2 flex items-center justify-between gap-2 border-t pt-3"
                   style={{ borderColor: `${v.border}30` }}
@@ -166,26 +226,81 @@ export default function TemplatesPage() {
                     {tpl.slug}
                   </p>
 
-                  <a
-                    href={`${RSVP_URL}/preview/${tpl.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-semibold border transition-all hover:opacity-80"
-                    style={{
-                      color: v.labelColor,
-                      borderColor: `${v.labelColor}60`,
-                      background: v.labelBg,
-                    }}
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                    Preview
-                  </a>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => openEdit(tpl)}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold border transition-all cursor-pointer hover:opacity-80"
+                      style={{
+                        color: v.labelColor,
+                        borderColor: `${v.labelColor}60`,
+                        background: v.labelBg,
+                      }}
+                    >
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </button>
+
+                    <a
+                      href={`${RSVP_URL}/preview/${tpl.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold border transition-all hover:opacity-80"
+                      style={{
+                        color: v.labelColor,
+                        borderColor: `${v.labelColor}60`,
+                        background: v.labelBg,
+                      }}
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      Preview
+                    </a>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
       )}
+
+      {/* Edit Template Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        title="Edit Template"
+      >
+        <form onSubmit={onSubmit} className="space-y-3">
+          <div>
+            <Label htmlFor="tpl-name">Name</Label>
+            <Input id="tpl-name" {...form.register("name", { required: true })} />
+          </div>
+          <div>
+            <Label htmlFor="tpl-description">Description</Label>
+            <Textarea
+              id="tpl-description"
+              rows={3}
+              placeholder="Short description of the template design"
+              {...form.register("description")}
+            />
+          </div>
+          <div>
+            <Label htmlFor="tpl-active">Status</Label>
+            <Select id="tpl-active" {...form.register("is_active")}>
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </Select>
+          </div>
+          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={updateTemplate.isPending}>
+              {updateTemplate.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </Dialog>
     </div>
   );
 }

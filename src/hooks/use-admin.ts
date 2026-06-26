@@ -48,6 +48,22 @@ export function useTemplates() {
   });
 }
 
+export function useUpdateTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      templateId,
+      payload,
+    }: {
+      templateId: number;
+      payload: { name: string; description?: string | null; is_active?: boolean };
+    }) => adminService.updateTemplate(templateId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invitation-templates"] });
+    },
+  });
+}
+
 export function useIncome(params: { status?: string; page?: number } = {}) {
   return useQuery({
     queryKey: ["admin", "income", params],

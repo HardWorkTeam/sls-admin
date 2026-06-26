@@ -96,6 +96,17 @@ export const adminService = {
     return data.data;
   },
 
+  async updateTemplate(
+    templateId: number,
+    payload: { name: string; description?: string | null; is_active?: boolean },
+  ): Promise<InvitationTemplate> {
+    const { data } = await api.put<{ data: InvitationTemplate }>(
+      `/invitation-templates/${templateId}`,
+      payload,
+    );
+    return data.data;
+  },
+
   async createPackage(payload: PackagePayload): Promise<Package> {
     const { data } = await api.post<{ data: Package }>("/packages", payload);
     return data.data;
