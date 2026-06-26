@@ -98,7 +98,7 @@ export const adminService = {
 
   async updateTemplate(
     templateId: number,
-    payload: { name: string; description?: string | null; is_active?: boolean },
+    payload: { slug?: string; name: string; description?: string | null; is_active?: boolean },
   ): Promise<InvitationTemplate> {
     const { data } = await api.put<{ data: InvitationTemplate }>(
       `/invitation-templates/${templateId}`,

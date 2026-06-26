@@ -60,7 +60,7 @@ const VISUAL: Record<
     palette: ["#2C3E56", "#6A8CB2", "#BEA56E"],
     fallbackDescription: "Watercolor leaves. White clean design, gold ring, elegant serif.",
   },
-  "phanaroth-luxury-v1": {
+  "red-rose-luxury-v1": {
     bg: "#4A0404",
     border: "#E8C97A",
     labelColor: "#E8C97A",
@@ -100,6 +100,7 @@ const FALLBACK = {
 };
 
 interface TemplateForm {
+  slug: string;
   name: string;
   is_active: string;
 }
@@ -113,12 +114,13 @@ export default function TemplatesPage() {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<TemplateForm>({
-    defaultValues: { name: "", is_active: "true" },
+    defaultValues: { slug: "", name: "", is_active: "true" },
   });
 
   const openEdit = (tpl: InvitationTemplate) => {
     setEditingTemplate(tpl);
     form.reset({
+      slug: tpl.slug,
       name: tpl.name,
       is_active: tpl.is_active ? "true" : "false",
     });
@@ -133,6 +135,7 @@ export default function TemplatesPage() {
       await updateTemplate.mutateAsync({
         templateId: editingTemplate.id,
         payload: {
+          slug: values.slug.trim(),
           name: values.name,
           is_active: values.is_active === "true",
         },
@@ -267,6 +270,21 @@ export default function TemplatesPage() {
         title="Edit Template"
       >
         <form onSubmit={onSubmit} className="space-y-3">
+          <div>
+            <Label htmlFor="tpl-slug">Slug</Label>
+            <Input
+              id="tpl-slug"
+              className="font-mono"
+              {...form.register("slug", {
+                required: true,
+                pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+              })}
+            />
+            <p className="mt-1 text-[11px] text-zinc-500">
+              Lowercase letters, numbers and hyphens. Must match the template folder
+              and registry key in the RSVP app.
+            </p>
+          </div>
           <div>
             <Label htmlFor="tpl-name">Name</Label>
             <Input id="tpl-name" {...form.register("name", { required: true })} />

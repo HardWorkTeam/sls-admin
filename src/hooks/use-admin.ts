@@ -56,7 +56,7 @@ export function useUpdateTemplate() {
       payload,
     }: {
       templateId: number;
-      payload: { name: string; description?: string | null; is_active?: boolean };
+      payload: { slug?: string; name: string; description?: string | null; is_active?: boolean };
     }) => adminService.updateTemplate(templateId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invitation-templates"] });
