@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,6 +77,7 @@ export function GuestsTab({ weddingId }: { weddingId: number }) {
   const deleteGuest = useDeleteGuest(weddingId);
   const importGuests = useImportGuests(weddingId);
   const bulkInvite = useBulkInvite(weddingId);
+  const confirm = useConfirm();
 
   const form = useForm<GuestForm>({ resolver: zodResolver(guestSchema) });
 
@@ -356,8 +358,14 @@ export function GuestsTab({ weddingId }: { weddingId: number }) {
                         variant="ghost"
                         size="icon"
                         aria-label={`Delete ${guest.name}`}
-                        onClick={() => {
-                          if (confirm(`Delete guest "${guest.name}"?`)) {
+                        onClick={async () => {
+                          if (
+                            await confirm({
+                              title: `Delete guest "${guest.name}"?`,
+                              description:
+                                "The guest and their RSVP/seating assignments will be removed.",
+                            })
+                          ) {
                             deleteGuest.mutate(guest.id);
                           }
                         }}

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +55,7 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
   const { data: guestsPage } = useGuests(weddingId, { per_page: 200 });
   const createGift = useCreateGift(weddingId);
   const deleteGift = useDeleteGift(weddingId);
+  const confirm = useConfirm();
 
   const form = useForm<GiftForm>({
     defaultValues: { guest_id: "", gift_type: "cash", amount: "", item_name: "", note: "" },
@@ -167,8 +169,14 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
                       variant="ghost"
                       size="icon"
                       aria-label="Delete gift"
-                      onClick={() => {
-                        if (confirm("Delete this gift record?")) {
+                      onClick={async () => {
+                        if (
+                          await confirm({
+                            title: "Delete this gift record?",
+                            description:
+                              "This gift entry will be permanently removed.",
+                          })
+                        ) {
                           deleteGift.mutate(gift.id);
                         }
                       }}

@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,6 +59,7 @@ export default function UsersPage() {
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
   const deleteUser = useDeleteUser();
+  const confirm = useConfirm();
 
   const form = useForm<UserForm>();
 
@@ -205,8 +207,14 @@ export default function UsersPage() {
                         size="icon"
                         aria-label={`Delete ${user.name}`}
                         disabled={user.id === currentUser?.id}
-                        onClick={() => {
-                          if (confirm(`Delete user "${user.name}"?`)) {
+                        onClick={async () => {
+                          if (
+                            await confirm({
+                              title: `Delete user "${user.name}"?`,
+                              description:
+                                "This account will lose access immediately.",
+                            })
+                          ) {
                             deleteUser.mutate(user.id);
                           }
                         }}
