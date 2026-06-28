@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -61,12 +61,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   const hasRole = useAuthStore((state) => state.hasRole);
   const clear = useAuthStore((state) => state.clear);
   const logout = useLogout();
-  const [hydrated, setHydrated] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  // True only after client hydration. Gates the auth redirect so we don't
+  // bounce on the server render / first paint before the persisted token is
+  // read. useSyncExternalStore returns the server snapshot (false) during SSR
+  // and the client snapshot (true) once mounted — no setState-in-effect needed.
+  const hydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   useMe();
-
-  useEffect(() => setHydrated(true), []);
 
   useEffect(() => {
     if (hydrated && !token) {
@@ -84,8 +90,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [hydrated, token, user, clear, router]);
 
-  // Close the mobile drawer whenever the route changes.
-  useEffect(() => setMobileNavOpen(false), [pathname]);
 
   if (!hydrated || !token) {
     return <PageLoader label="Checking session..." />;
@@ -114,6 +118,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setMobileNavOpen(false)}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 active
