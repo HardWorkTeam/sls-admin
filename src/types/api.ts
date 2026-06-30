@@ -56,6 +56,7 @@ export interface PlanCapabilities {
     expense: boolean;
     rsvp: boolean;
     timeline: boolean;
+    checkin: boolean;
   };
   guest_limit: number | null;
   invitation_design_limit: number | null;
@@ -102,6 +103,7 @@ export interface Wedding {
   completed_at: string | null;
   cancelled_at: string | null;
   payment_status?: SubscriptionStatus | "unpaid";
+  capabilities?: PlanCapabilities;
   package?: Package | null;
   created_by?: User | null;
   members?: WeddingMember[];

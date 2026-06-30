@@ -69,7 +69,15 @@ const guestSchema = z.object({
 
 type GuestForm = z.infer<typeof guestSchema>;
 
-export function GuestsTab({ weddingId }: { weddingId: number }) {
+export function GuestsTab({
+  weddingId,
+  canCheckIn = true,
+}: {
+  weddingId: number;
+  // Whether the wedding's plan includes wedding-day QR check-in. When false the
+  // scanner, per-guest QR and arrival column are hidden (API also 403s).
+  canCheckIn?: boolean;
+}) {
   const [search, setSearch] = useState("");
   const [groupId, setGroupId] = useState("");
   const [page, setPage] = useState(1);
@@ -99,7 +107,7 @@ export function GuestsTab({ weddingId }: { weddingId: number }) {
   const importGuests = useImportGuests(weddingId);
   const bulkInvite = useBulkInvite(weddingId);
   const setCheckIn = useSetCheckIn(weddingId);
-  const { data: checkInStats } = useCheckInStats(weddingId);
+  const { data: checkInStats } = useCheckInStats(weddingId, canCheckIn);
   const confirm = useConfirm();
 
   const toggleCheckIn = (guest: Guest) => {
@@ -202,8 +210,10 @@ export function GuestsTab({ weddingId }: { weddingId: number }) {
       return;
     }
     // Include the guest's check-in token so their invite shows a personal
-    // "my check-in QR" pass they can present at the door on the wedding day.
-    const tokenParam = guest.check_in_token ? `&t=${guest.check_in_token}` : "";
+    // "my check-in QR" pass they can present at the door on the wedding day —
+    // only when the plan includes the check-in feature.
+    const tokenParam =
+      canCheckIn && guest.check_in_token ? `&t=${guest.check_in_token}` : "";
     const link = `${RSVP_URL}/invite/${code}?to=${encodeURIComponent(guest.name)}${tokenParam}`;
     try {
       await navigator.clipboard.writeText(link);
@@ -263,16 +273,18 @@ export function GuestsTab({ weddingId }: { weddingId: number }) {
           <Button variant="outline" size="sm" onClick={onExport}>
             <Download className="h-4 w-4" /> Export
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setScannerOpen(true)}>
-            <ScanLine className="h-4 w-4" /> Check-in Scanner
-          </Button>
+          {canCheckIn ? (
+            <Button variant="outline" size="sm" onClick={() => setScannerOpen(true)}>
+              <ScanLine className="h-4 w-4" /> Check-in Scanner
+            </Button>
+          ) : null}
           <Button size="sm" onClick={openCreate}>
             <Plus className="h-4 w-4" /> Add Guest
           </Button>
         </div>
       </div>
 
-      {checkInStats && checkInStats.total > 0 ? (
+      {canCheckIn && checkInStats && checkInStats.total > 0 ? (
         <p className="text-sm text-zinc-500">
           <CheckCircle2 className="mr-1 inline h-4 w-4 text-emerald-600" />
           <span className="font-medium text-emerald-700">{checkInStats.arrived}</span>{" "}
@@ -341,8 +353,8 @@ export function GuestsTab({ weddingId }: { weddingId: number }) {
                 <TableHead>Group</TableHead>
                 <TableHead>Table / Seat</TableHead>
                 <TableHead>Invitation</TableHead>
-                <TableHead>Arrived</TableHead>
-                <TableHead className="w-32">Actions</TableHead>
+                {canCheckIn ? <TableHead>Arrived</TableHead> : null}
+                <TableHead className={canCheckIn ? "w-32" : "w-24"}>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -381,42 +393,46 @@ export function GuestsTab({ weddingId }: { weddingId: number }) {
                       "—"
                     )}
                   </TableCell>
-                  <TableCell>
-                    <button
-                      type="button"
-                      onClick={() => toggleCheckIn(guest)}
-                      disabled={setCheckIn.isPending}
-                      title={
-                        guest.checked_in_at
-                          ? `Arrived ${new Date(guest.checked_in_at).toLocaleString()} — click to undo`
-                          : "Mark as arrived"
-                      }
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium transition-colors",
-                        guest.checked_in_at
-                          ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                          : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200",
-                      )}
-                    >
-                      {guest.checked_in_at ? (
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      ) : (
-                        <Circle className="h-3.5 w-3.5" />
-                      )}
-                      {guest.checked_in_at ? "Arrived" : "Mark"}
-                    </button>
-                  </TableCell>
+                  {canCheckIn ? (
+                    <TableCell>
+                      <button
+                        type="button"
+                        onClick={() => toggleCheckIn(guest)}
+                        disabled={setCheckIn.isPending}
+                        title={
+                          guest.checked_in_at
+                            ? `Arrived ${new Date(guest.checked_in_at).toLocaleString()} — click to undo`
+                            : "Mark as arrived"
+                        }
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium transition-colors",
+                          guest.checked_in_at
+                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                            : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200",
+                        )}
+                      >
+                        {guest.checked_in_at ? (
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        ) : (
+                          <Circle className="h-3.5 w-3.5" />
+                        )}
+                        {guest.checked_in_at ? "Arrived" : "Mark"}
+                      </button>
+                    </TableCell>
+                  ) : null}
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Show check-in QR for ${guest.name}`}
-                        title="Check-in QR code"
-                        onClick={() => setQrGuest(guest)}
-                      >
-                        <QrCode className="h-4 w-4 text-zinc-600" />
-                      </Button>
+                      {canCheckIn ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Show check-in QR for ${guest.name}`}
+                          title="Check-in QR code"
+                          onClick={() => setQrGuest(guest)}
+                        >
+                          <QrCode className="h-4 w-4 text-zinc-600" />
+                        </Button>
+                      ) : null}
                       <Button
                         variant="ghost"
                         size="icon"

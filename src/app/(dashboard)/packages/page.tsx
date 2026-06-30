@@ -36,6 +36,7 @@ interface PackageForm {
   module_expense: boolean;
   module_rsvp: boolean;
   module_timeline: boolean;
+  module_checkin: boolean;
   guest_limit: string;
   design_limit: string;
   is_active: string;
@@ -53,6 +54,7 @@ const EMPTY: PackageForm = {
   module_expense: false,
   module_rsvp: false,
   module_timeline: false,
+  module_checkin: false,
   guest_limit: "",
   design_limit: "",
   is_active: "true",
@@ -93,6 +95,7 @@ export default function PackagesPage() {
       module_expense: caps?.modules.expense ?? false,
       module_rsvp: caps?.modules.rsvp ?? false,
       module_timeline: caps?.modules.timeline ?? false,
+      module_checkin: caps?.modules.checkin ?? false,
       guest_limit: caps?.guest_limit != null ? String(caps.guest_limit) : "",
       design_limit:
         caps?.invitation_design_limit != null
@@ -123,6 +126,7 @@ export default function PackagesPage() {
           expense: values.module_expense,
           rsvp: values.module_rsvp,
           timeline: values.module_timeline,
+          checkin: values.module_checkin,
         },
         // Blank = unlimited; an explicit 0 = none (feature included but no
         // allowance, e.g. a Free plan with 0 invitation designs).
@@ -328,6 +332,14 @@ export default function PackagesPage() {
                   {...form.register("module_timeline")}
                 />
                 Timeline
+              </label>
+              <label className="flex items-center gap-2 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600"
+                  {...form.register("module_checkin")}
+                />
+                Guest check-in (QR)
               </label>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-1">

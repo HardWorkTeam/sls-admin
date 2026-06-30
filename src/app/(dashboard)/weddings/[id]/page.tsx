@@ -78,7 +78,10 @@ export default function WeddingDetailPage() {
         <InvitationsTab weddingId={weddingId} />
       </TabPanel>
       <TabPanel active={tab === "guests"}>
-        <GuestsTab weddingId={weddingId} />
+        <GuestsTab
+          weddingId={weddingId}
+          canCheckIn={wedding.capabilities ? wedding.capabilities.modules.checkin : false}
+        />
       </TabPanel>
       <TabPanel active={tab === "rsvp"}>
         <RsvpTab weddingId={weddingId} />
