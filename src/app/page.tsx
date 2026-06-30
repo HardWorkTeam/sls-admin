@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PasswordInput } from "@/components/ui/password-input";
 import { apiErrorMessage } from "@/lib/api";
 import { isAdminUser } from "@/lib/roles";
 import { useLogin } from "@/hooks/use-auth";
@@ -113,10 +114,9 @@ export default function Home() {
               >
                 Password
               </label>
-              <input
+              <PasswordInput
                 id="password"
                 name="password"
-                type="password"
                 placeholder="Please input your password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}

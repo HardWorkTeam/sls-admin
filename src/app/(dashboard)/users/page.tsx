@@ -9,6 +9,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Pagination } from "@/components/ui/pagination";
 import { Select } from "@/components/ui/select";
@@ -256,9 +257,8 @@ export default function UsersPage() {
               <Label htmlFor="user-password">
                 {editing ? "New password (optional)" : "Password"}
               </Label>
-              <Input
+              <PasswordInput
                 id="user-password"
-                type="password"
                 {...form.register("password", { required: !editing, minLength: 8 })}
               />
             </div>
