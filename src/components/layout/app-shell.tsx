@@ -1,7 +1,7 @@
 "use client";
 
 import { PageLoader } from "@/components/ui/spinner";
-import { useLogout, useMe } from "@/hooks/use-auth";
+import { useLogout, useMe, useSessionRefresh } from "@/hooks/use-auth";
 import { isAdminUser } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -73,6 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   useMe();
+  useSessionRefresh();
 
   useEffect(() => {
     if (hydrated && !token) {
