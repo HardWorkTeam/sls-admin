@@ -29,6 +29,7 @@ import {
   useUpdateUser,
   useUsers,
 } from "@/hooks/use-admin";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { apiErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import type { User } from "@/types/api";
@@ -51,8 +52,10 @@ export default function UsersPage() {
   const [error, setError] = useState<string | null>(null);
 
   const currentUser = useAuthStore((state) => state.user);
+  // Debounce so typing in the search box doesn't fire a request per keystroke.
+  const debouncedSearch = useDebouncedValue(search, 300);
   const { data, isLoading } = useUsers({
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     role: roleFilter || undefined,
     page,
   });
