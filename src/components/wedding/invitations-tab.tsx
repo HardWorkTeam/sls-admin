@@ -21,6 +21,7 @@ import {
   usePublishInvitation,
 } from "@/hooks/use-invitations";
 import { apiErrorMessage } from "@/lib/api";
+import { sanitizeSvg } from "@/lib/utils";
 import { invitationService } from "@/services/invitation-service";
 
 interface InvitationForm {
@@ -63,7 +64,7 @@ export function InvitationsTab({ weddingId }: { weddingId: number }) {
 
   const showQr = async (invitationId: number) => {
     const svg = await invitationService.qrSvg(weddingId, invitationId);
-    setQrSvg(svg);
+    setQrSvg(sanitizeSvg(svg));
   };
 
   const copyUrl = async (invitationId: number, url: string) => {
