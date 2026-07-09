@@ -1,30 +1,26 @@
 "use client";
 
 import { Gift as GiftIcon, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
 import { useConfirm } from "@/components/ui/confirm-dialog";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Pagination } from "@/components/ui/pagination";
 import { Select } from "@/components/ui/select";
-import { PageLoader } from "@/components/ui/spinner";
 import { StatCard } from "@/components/ui/stat-card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  DataTable,
+  FormDialog,
+  FormField,
+  QueryState,
+  Toolbar,
+  type DataTableColumn,
+} from "@/components/kit";
 import { useCreateGift, useDeleteGift, useGifts, useGiftSummary } from "@/hooks/use-gifts";
 import { useGuests } from "@/hooks/use-guests";
 import { apiErrorMessage } from "@/lib/api";
+import type { Gift } from "@/types/api";
 import { formatDateTime, formatMoney } from "@/lib/utils";
 
 const GIFT_TYPE_LABELS: Record<string, string> = {
@@ -41,26 +37,37 @@ interface GiftForm {
   note: string;
 }
 
+const EMPTY_FORM: GiftForm = {
+  guest_id: "",
+  gift_type: "cash",
+  amount: "",
+  item_name: "",
+  note: "",
+};
+
 export function GiftsTab({ weddingId }: { weddingId: number }) {
   const [giftType, setGiftType] = useState("");
   const [page, setPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { data, isLoading } = useGifts(weddingId, {
+  const gifts = useGifts(weddingId, {
     gift_type: giftType || undefined,
     page,
   });
   const { data: summary } = useGiftSummary(weddingId);
   const { data: guestsPage } = useGuests(weddingId, { per_page: 200 });
   const createGift = useCreateGift(weddingId);
-  const deleteGift = useDeleteGift(weddingId);
+  const { mutate: removeGift } = useDeleteGift(weddingId);
   const confirm = useConfirm();
 
-  const form = useForm<GiftForm>({
-    defaultValues: { guest_id: "", gift_type: "cash", amount: "", item_name: "", note: "" },
-  });
+  const form = useForm<GiftForm>({ defaultValues: EMPTY_FORM });
   const watchType = form.watch("gift_type");
+
+  const openDialog = () => {
+    setError(null);
+    setDialogOpen(true);
+  };
 
   const onSubmit = form.handleSubmit(async (values) => {
     setError(null);
@@ -72,12 +79,77 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
         item_name: values.item_name || null,
         note: values.note || null,
       });
-      form.reset({ guest_id: "", gift_type: "cash", amount: "", item_name: "", note: "" });
+      form.reset(EMPTY_FORM);
       setDialogOpen(false);
     } catch (err) {
       setError(apiErrorMessage(err));
     }
   });
+
+  const columns = useMemo<DataTableColumn<Gift>[]>(
+    () => [
+      {
+        key: "guest",
+        header: "Guest",
+        className: "font-medium text-zinc-800",
+        cell: (gift) => gift.guest?.name ?? "Anonymous",
+      },
+      {
+        key: "type",
+        header: "Type",
+        cell: (gift) => (
+          <Badge variant="secondary">
+            {GIFT_TYPE_LABELS[gift.gift_type] ?? gift.gift_type}
+          </Badge>
+        ),
+      },
+      {
+        key: "amount",
+        header: "Amount / Item",
+        cell: (gift) =>
+          gift.gift_type === "item" ? (gift.item_name ?? "—") : formatMoney(gift.amount),
+      },
+      {
+        key: "note",
+        header: "Note",
+        hideBelow: "md",
+        className: "max-w-48",
+        cell: (gift) => <p className="truncate text-zinc-600">{gift.note ?? "—"}</p>,
+      },
+      {
+        key: "received",
+        header: "Received",
+        hideBelow: "sm",
+        className: "text-xs text-zinc-500",
+        cell: (gift) => formatDateTime(gift.received_at),
+      },
+      {
+        key: "actions",
+        header: "",
+        headClassName: "w-16",
+        cell: (gift) => (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Delete gift"
+            onClick={async () => {
+              if (
+                await confirm({
+                  title: "Delete this gift record?",
+                  description: "This gift entry will be permanently removed.",
+                })
+              ) {
+                removeGift(gift.id);
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
+        ),
+      },
+    ],
+    [confirm, removeGift],
+  );
 
   return (
     <div className="space-y-4">
@@ -98,9 +170,16 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <Toolbar
+        actions={
+          <Button size="sm" onClick={openDialog}>
+            <Plus className="h-4 w-4" /> Record Gift
+          </Button>
+        }
+      >
         <Select
           className="w-44"
+          aria-label="Filter by gift type"
           value={giftType}
           onChange={(event) => {
             setGiftType(event.target.value);
@@ -112,91 +191,46 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
           <option value="bank_transfer">Bank Transfer</option>
           <option value="item">Gift Item</option>
         </Select>
-        <Button size="sm" onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4" /> Record Gift
-        </Button>
-      </div>
+      </Toolbar>
 
-      {isLoading ? (
-        <PageLoader label="Loading gifts..." />
-      ) : !data || data.data.length === 0 ? (
-        <EmptyState
-          title="No gifts recorded"
-          description="Track cash gifts, bank transfers and gift items received."
-          action={
-            <Button onClick={() => setDialogOpen(true)}>
+      <QueryState
+        query={gifts}
+        loadingLabel="Loading gifts..."
+        empty={{
+          title: "No gifts recorded",
+          description: "Track cash gifts, bank transfers and gift items received.",
+          action: (
+            <Button onClick={openDialog}>
               <Plus className="h-4 w-4" /> Record Gift
             </Button>
-          }
-        />
-      ) : (
-        <>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Guest</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Amount / Item</TableHead>
-                <TableHead>Note</TableHead>
-                <TableHead>Received</TableHead>
-                <TableHead className="w-16" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.data.map((gift) => (
-                <TableRow key={gift.id}>
-                  <TableCell className="font-medium text-zinc-800">
-                    {gift.guest?.name ?? "Anonymous"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {GIFT_TYPE_LABELS[gift.gift_type] ?? gift.gift_type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {gift.gift_type === "item"
-                      ? gift.item_name ?? "—"
-                      : formatMoney(gift.amount)}
-                  </TableCell>
-                  <TableCell className="max-w-48">
-                    <p className="truncate text-zinc-600">{gift.note ?? "—"}</p>
-                  </TableCell>
-                  <TableCell className="text-xs text-zinc-500">
-                    {formatDateTime(gift.received_at)}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Delete gift"
-                      onClick={async () => {
-                        if (
-                          await confirm({
-                            title: "Delete this gift record?",
-                            description:
-                              "This gift entry will be permanently removed.",
-                          })
-                        ) {
-                          deleteGift.mutate(gift.id);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <Pagination meta={data.meta} onPageChange={setPage} />
-        </>
-      )}
+          ),
+        }}
+      >
+        {(giftsPage) => (
+          <DataTable
+            caption="Gifts received"
+            columns={columns}
+            rows={giftsPage.data}
+            rowKey={(gift) => gift.id}
+            meta={giftsPage.meta}
+            onPageChange={setPage}
+            isFetching={gifts.isFetching}
+          />
+        )}
+      </QueryState>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} title="Record Gift">
-        <form onSubmit={onSubmit} className="space-y-3">
-          <div>
-            <Label htmlFor="gift-guest">Guest</Label>
-            <Select id="gift-guest" {...form.register("guest_id")}>
+      <FormDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title="Record Gift"
+        onSubmit={onSubmit}
+        error={error}
+        pending={createGift.isPending}
+        submitLabel="Save Gift"
+      >
+        <FormField label="Guest">
+          {(field) => (
+            <Select {...field} {...form.register("guest_id")}>
               <option value="">Anonymous / not in list</option>
               {(guestsPage?.data ?? []).map((guest) => (
                 <option key={guest.id} value={guest.id}>
@@ -204,49 +238,40 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
                 </option>
               ))}
             </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="gift-type">Type</Label>
-              <Select id="gift-type" {...form.register("gift_type")}>
+          )}
+        </FormField>
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label="Type">
+            {(field) => (
+              <Select {...field} {...form.register("gift_type")}>
                 <option value="cash">Cash</option>
                 <option value="bank_transfer">Bank Transfer</option>
                 <option value="item">Gift Item</option>
               </Select>
-            </div>
-            {watchType === "item" ? (
-              <div>
-                <Label htmlFor="gift-item">Item name</Label>
-                <Input id="gift-item" {...form.register("item_name")} />
-              </div>
-            ) : (
-              <div>
-                <Label htmlFor="gift-amount">Amount</Label>
+            )}
+          </FormField>
+          {watchType === "item" ? (
+            <FormField label="Item name">
+              {(field) => <Input {...field} {...form.register("item_name")} />}
+            </FormField>
+          ) : (
+            <FormField label="Amount">
+              {(field) => (
                 <Input
-                  id="gift-amount"
                   type="number"
                   step="0.01"
                   min="0"
+                  {...field}
                   {...form.register("amount")}
                 />
-              </div>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="gift-note">Note</Label>
-            <Input id="gift-note" {...form.register("note")} />
-          </div>
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={createGift.isPending}>
-              Save Gift
-            </Button>
-          </div>
-        </form>
-      </Dialog>
+              )}
+            </FormField>
+          )}
+        </div>
+        <FormField label="Note">
+          {(field) => <Input {...field} {...form.register("note")} />}
+        </FormField>
+      </FormDialog>
     </div>
   );
 }

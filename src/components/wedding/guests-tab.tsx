@@ -8,7 +8,6 @@ import {
   Plus,
   QrCode,
   ScanLine,
-  Search,
   Send,
   Trash2,
   Upload,
@@ -21,12 +20,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { useConfirm } from "@/components/ui/confirm-dialog";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pagination } from "@/components/ui/pagination";
 import { Select } from "@/components/ui/select";
-import { PageLoader } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -35,6 +32,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  FormDialog,
+  FormError,
+  FormField,
+  QueryState,
+  SearchInput,
+  Toolbar,
+} from "@/components/kit";
 import {
   useBulkInvite,
   useCheckInStats,
@@ -47,7 +52,6 @@ import {
   useUpdateGuest,
 } from "@/hooks/use-guests";
 import { useInvitations } from "@/hooks/use-invitations";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { apiErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { guestService } from "@/services/guest-service";
@@ -94,11 +98,10 @@ export function GuestsTab({
   const [scannerOpen, setScannerOpen] = useState(false);
   const [qrGuest, setQrGuest] = useState<Guest | null>(null);
 
-  // Debounce the search term so typing doesn't fire a request per keystroke —
-  // the term is part of the query key, so only the settled value hits the API.
-  const debouncedSearch = useDebouncedValue(search, 300);
-  const { data, isLoading } = useGuests(weddingId, {
-    search: debouncedSearch || undefined,
+  // `search` holds the settled (already debounced) term — SearchInput owns
+  // the keystroke state, so only the settled value hits the API.
+  const guestsQuery = useGuests(weddingId, {
+    search: search || undefined,
     guest_group_id: groupId ? Number(groupId) : undefined,
     page,
   });
@@ -232,21 +235,47 @@ export function GuestsTab({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-          <Input
-            placeholder="Search guests..."
-            className="pl-9"
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
-            }}
-          />
-        </div>
+      <Toolbar
+        actions={
+          <>
+            <input
+              ref={fileInput}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) onImport(file);
+                event.target.value = "";
+              }}
+            />
+            <Button variant="outline" size="sm" onClick={() => fileInput.current?.click()}>
+              <Upload className="h-4 w-4" /> Import CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={onExport}>
+              <Download className="h-4 w-4" /> Export
+            </Button>
+            {canCheckIn ? (
+              <Button variant="outline" size="sm" onClick={() => setScannerOpen(true)}>
+                <ScanLine className="h-4 w-4" /> Check-in Scanner
+              </Button>
+            ) : null}
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" /> Add Guest
+            </Button>
+          </>
+        }
+      >
+        <SearchInput
+          placeholder="Search guests..."
+          onSearch={(query) => {
+            setSearch(query);
+            setPage(1);
+          }}
+        />
         <Select
           className="w-44"
+          aria-label="Filter by group"
           value={groupId}
           onChange={(event) => {
             setGroupId(event.target.value);
@@ -260,34 +289,7 @@ export function GuestsTab({
             </option>
           ))}
         </Select>
-        <div className="ml-auto flex flex-wrap gap-2">
-          <input
-            ref={fileInput}
-            type="file"
-            accept=".csv"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) onImport(file);
-              event.target.value = "";
-            }}
-          />
-          <Button variant="outline" size="sm" onClick={() => fileInput.current?.click()}>
-            <Upload className="h-4 w-4" /> Import CSV
-          </Button>
-          <Button variant="outline" size="sm" onClick={onExport}>
-            <Download className="h-4 w-4" /> Export
-          </Button>
-          {canCheckIn ? (
-            <Button variant="outline" size="sm" onClick={() => setScannerOpen(true)}>
-              <ScanLine className="h-4 w-4" /> Check-in Scanner
-            </Button>
-          ) : null}
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4" /> Add Guest
-          </Button>
-        </div>
-      </div>
+      </Toolbar>
 
       {canCheckIn && checkInStats && checkInStats.total > 0 ? (
         <p className="text-sm text-zinc-500">
@@ -324,22 +326,24 @@ export function GuestsTab({
       ) : null}
 
       {feedback ? <p className="text-sm text-emerald-700">{feedback}</p> : null}
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      <FormError error={error} />
 
-      {isLoading ? (
-        <PageLoader label="Loading guests..." />
-      ) : !data || data.data.length === 0 ? (
-        <EmptyState
-          title="No guests yet"
-          description="Add guests manually or import a CSV file (columns: name, phone, email, address, group, is_vip, note)."
-          action={
+      <QueryState
+        query={guestsQuery}
+        loadingLabel="Loading guests..."
+        empty={{
+          title: "No guests yet",
+          description:
+            "Add guests manually or import a CSV file (columns: name, phone, email, address, group, is_vip, note).",
+          action: (
             <Button onClick={openCreate}>
               <Plus className="h-4 w-4" /> Add Guest
             </Button>
-          }
-        />
-      ) : (
-        <>
+          ),
+        }}
+      >
+        {(guestsPage) => (
+          <>
           <Table>
             <TableHeader>
               <TableRow>
@@ -347,9 +351,11 @@ export function GuestsTab({
                   <input
                     type="checkbox"
                     aria-label="Select all"
-                    checked={selected.length === data.data.length && data.data.length > 0}
+                    checked={
+                      selected.length === guestsPage.data.length && guestsPage.data.length > 0
+                    }
                     onChange={(event) =>
-                      setSelected(event.target.checked ? data.data.map((g) => g.id) : [])
+                      setSelected(event.target.checked ? guestsPage.data.map((g) => g.id) : [])
                     }
                   />
                 </TableHead>
@@ -363,7 +369,7 @@ export function GuestsTab({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.data.map((guest) => (
+              {guestsPage.data.map((guest) => (
                 <TableRow key={guest.id}>
                   <TableCell>
                     <input
@@ -479,43 +485,38 @@ export function GuestsTab({
               ))}
             </TableBody>
           </Table>
-          <Pagination meta={data.meta} onPageChange={setPage} />
-        </>
-      )}
+          <Pagination meta={guestsPage.meta} onPageChange={setPage} />
+          </>
+        )}
+      </QueryState>
 
-      <Dialog
+      <FormDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         title={editing ? `Edit ${editing.name}` : "Add Guest"}
+        onSubmit={onSubmit}
+        error={error}
+        pending={createGuest.isPending || updateGuest.isPending}
+        submitLabel={editing ? "Save Changes" : "Add Guest"}
       >
-        <form onSubmit={onSubmit} className="space-y-3">
-          <div>
-            <Label htmlFor="guest-name">Name</Label>
-            <Input id="guest-name" {...form.register("name")} />
-            {form.formState.errors.name ? (
-              <p className="mt-1 text-xs text-red-600">
-                {form.formState.errors.name.message}
-              </p>
-            ) : null}
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="guest-phone">Phone</Label>
-              <Input id="guest-phone" {...form.register("phone")} />
-            </div>
-            <div>
-              <Label htmlFor="guest-email">Email</Label>
-              <Input id="guest-email" type="email" {...form.register("email")} />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="guest-address">Address</Label>
-            <Input id="guest-address" {...form.register("address")} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="guest-group">Group</Label>
-              <Select id="guest-group" {...form.register("guest_group_id")}>
+        <FormField label="Name" required error={form.formState.errors.name?.message}>
+          {(field) => <Input {...field} {...form.register("name")} />}
+        </FormField>
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label="Phone">
+            {(field) => <Input {...field} {...form.register("phone")} />}
+          </FormField>
+          <FormField label="Email" error={form.formState.errors.email?.message}>
+            {(field) => <Input type="email" {...field} {...form.register("email")} />}
+          </FormField>
+        </div>
+        <FormField label="Address">
+          {(field) => <Input {...field} {...form.register("address")} />}
+        </FormField>
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label="Group">
+            {(field) => (
+              <Select {...field} {...form.register("guest_group_id")}>
                 <option value="">No group</option>
                 {(groups ?? []).map((group) => (
                   <option key={group.id} value={group.id}>
@@ -523,30 +524,17 @@ export function GuestsTab({
                   </option>
                 ))}
               </Select>
-            </div>
-            <div className="flex items-end gap-2 pb-1.5">
-              <input id="guest-vip" type="checkbox" {...form.register("is_vip")} />
-              <Label htmlFor="guest-vip">VIP guest</Label>
-            </div>
+            )}
+          </FormField>
+          <div className="flex items-end gap-2 pb-1.5">
+            <input id="guest-vip" type="checkbox" {...form.register("is_vip")} />
+            <Label htmlFor="guest-vip">VIP guest</Label>
           </div>
-          <div>
-            <Label htmlFor="guest-note">Note</Label>
-            <Input id="guest-note" {...form.register("note")} />
-          </div>
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={createGuest.isPending || updateGuest.isPending}
-            >
-              {editing ? "Save Changes" : "Add Guest"}
-            </Button>
-          </div>
-        </form>
-      </Dialog>
+        </div>
+        <FormField label="Note">
+          {(field) => <Input {...field} {...form.register("note")} />}
+        </FormField>
+      </FormDialog>
 
       {/* Wedding-day check-in scanner */}
       <Dialog
