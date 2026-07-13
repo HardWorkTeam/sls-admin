@@ -19,6 +19,7 @@ import {
   useDeleteInvitation,
   useInvitations,
   usePublishInvitation,
+  useUnpublishInvitation,
 } from "@/hooks/use-invitations";
 import { apiErrorMessage } from "@/lib/api";
 import { sanitizeSvg } from "@/lib/utils";
@@ -34,6 +35,7 @@ export function InvitationsTab({ weddingId }: { weddingId: number }) {
   const { data: templates } = useTemplates();
   const createInvitation = useCreateInvitation(weddingId);
   const publishInvitation = usePublishInvitation(weddingId);
+  const unpublishInvitation = useUnpublishInvitation(weddingId);
   const deleteInvitation = useDeleteInvitation(weddingId);
   const confirm = useConfirm();
 
@@ -147,11 +149,21 @@ export function InvitationsTab({ weddingId }: { weddingId: number }) {
                       <Send className="h-4 w-4" /> Publish
                     </Button>
                   ) : (
-                    <a href={invitation.public_url} target="_blank" rel="noreferrer">
-                      <Button size="sm" variant="secondary">
-                        <ExternalLink className="h-4 w-4" /> Open
+                    <>
+                      <a href={invitation.public_url} target="_blank" rel="noreferrer">
+                        <Button size="sm" variant="secondary">
+                          <ExternalLink className="h-4 w-4" /> Open
+                        </Button>
+                      </a>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => unpublishInvitation.mutate(invitation.id)}
+                        disabled={unpublishInvitation.isPending}
+                      >
+                        Unpublish
                       </Button>
-                    </a>
+                    </>
                   )}
                   <Button size="sm" variant="outline" onClick={() => showQr(invitation.id)}>
                     <QrCode className="h-4 w-4" /> QR Code
