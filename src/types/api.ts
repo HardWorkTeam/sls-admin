@@ -347,7 +347,7 @@ export interface MediaItem {
   id: number;
   wedding_id: number;
   album_id: number | null;
-  media_type: "photo" | "video";
+  media_type: "photo" | "video" | "document";
   url: string;
   thumbnail_url: string | null;
   original_name: string | null;

@@ -119,7 +119,7 @@ export function GalleryTab({ weddingId }: { weddingId: number }) {
             ref={fileInput}
             type="file"
             multiple
-            accept="image/*,video/*"
+            accept="image/*,video/*,application/*,text/*"
             className="hidden"
             onChange={(event) => {
               if (event.target.files?.length) onUpload(event.target.files);
@@ -168,6 +168,16 @@ export function GalleryTab({ weddingId }: { weddingId: number }) {
                   >
                     <Video className="h-10 w-10 text-zinc-400" />
                   </button>
+                ) : item.media_type === "document" ? (
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-2 bg-zinc-100 p-4 hover:bg-zinc-200"
+                  >
+                    <Download className="h-8 w-8 text-zinc-400" />
+                    <span className="truncate text-xs text-zinc-500 w-full text-center">{item.original_name}</span>
+                  </a>
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -291,6 +301,14 @@ export function GalleryTab({ weddingId }: { weddingId: number }) {
               className="max-h-[90vh] max-w-full rounded-lg"
               onClick={(event) => event.stopPropagation()}
             />
+          ) : lightbox.media_type === "document" ? (
+            <div className="flex flex-col items-center gap-4 rounded-lg bg-white p-8" onClick={(event) => event.stopPropagation()}>
+              <Download className="h-16 w-16 text-zinc-400" />
+              <p className="text-lg font-medium">{lightbox.original_name}</p>
+              <a href={lightbox.url} download target="_blank" rel="noreferrer" className="rounded-md bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-800">
+                Download File
+              </a>
+            </div>
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img
