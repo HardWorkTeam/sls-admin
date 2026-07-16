@@ -1,25 +1,17 @@
 "use client";
 
 import {
-  CheckCircle2,
-  Circle,
-  Download,
-  Pencil,
-  Plus,
-  QrCode,
-  ScanLine,
-  Send,
-  Trash2,
-  Upload,
-} from "lucide-react";
-import { useRef, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+  FormDialog,
+  FormError,
+  FormField,
+  QueryState,
+  SearchInput,
+  Toolbar,
+} from "@/components/kit";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pagination } from "@/components/ui/pagination";
@@ -32,14 +24,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  FormDialog,
-  FormError,
-  FormField,
-  QueryState,
-  SearchInput,
-  Toolbar,
-} from "@/components/kit";
 import {
   useBulkInvite,
   useCheckInStats,
@@ -57,6 +41,22 @@ import { apiErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { guestService } from "@/services/guest-service";
 import type { Guest } from "@/types/api";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  CheckCircle2,
+  Circle,
+  Download,
+  Pencil,
+  Plus,
+  QrCode,
+  ScanLine,
+  Send,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { CheckInScanner } from "./check-in-scanner";
 import { GuestQrDialog } from "./guest-qr-dialog";
 
@@ -162,7 +162,15 @@ export function GuestsTab({
 
   const openCreate = () => {
     setEditing(null);
-    form.reset({ name: "", phone: "", email: "", address: "", note: "", is_vip: false, guest_group_id: "" });
+    form.reset({
+      name: "",
+      phone: "",
+      email: "",
+      address: "",
+      note: "",
+      is_vip: false,
+      guest_group_id: "",
+    });
     setDialogOpen(true);
   };
 
@@ -185,7 +193,9 @@ export function GuestsTab({
     const payload = {
       ...values,
       email: values.email || null,
-      guest_group_id: values.guest_group_id ? Number(values.guest_group_id) : null,
+      guest_group_id: values.guest_group_id
+        ? Number(values.guest_group_id)
+        : null,
     };
     try {
       if (editing) {
@@ -221,7 +231,8 @@ export function GuestsTab({
   };
 
   const onBulkInvite = async () => {
-    if (!bulkInvitationId || (selected.length === 0 && !isAllMatchingSelected)) return;
+    if (!bulkInvitationId || (selected.length === 0 && !isAllMatchingSelected))
+      return;
     setError(null);
     try {
       const targetIds = isAllMatchingSelected
@@ -251,9 +262,12 @@ export function GuestsTab({
   const copyInviteLink = async (guest: Guest) => {
     setFeedback(null);
     setError(null);
-    const code = guest.invitation?.invitation_code ?? invitations?.[0]?.invitation_code;
+    const code =
+      guest.invitation?.invitation_code ?? invitations?.[0]?.invitation_code;
     if (!code) {
-      setError("Create an invitation first, then you can send a personalized link.");
+      setError(
+        "Create an invitation first, then you can send a personalized link.",
+      );
       return;
     }
     // Include the guest's short check-in code so their invite shows a personal
@@ -289,14 +303,22 @@ export function GuestsTab({
                 event.target.value = "";
               }}
             />
-            <Button variant="outline" size="sm" onClick={() => fileInput.current?.click()}>
-              <Upload className="h-4 w-4" /> Import XLSX
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fileInput.current?.click()}
+            >
+              <Upload className="h-4 w-4" /> Import Excel
             </Button>
             <Button variant="outline" size="sm" onClick={onExport}>
               <Download className="h-4 w-4" /> Export
             </Button>
             {canCheckIn ? (
-              <Button variant="outline" size="sm" onClick={() => setScannerOpen(true)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setScannerOpen(true)}
+              >
                 <ScanLine className="h-4 w-4" /> Check-in Scanner
               </Button>
             ) : null}
@@ -334,9 +356,11 @@ export function GuestsTab({
       {canCheckIn && checkInStats && checkInStats.total > 0 ? (
         <p className="text-sm text-zinc-500">
           <CheckCircle2 className="mr-1 inline h-4 w-4 text-emerald-600" />
-          <span className="font-medium text-emerald-700">{checkInStats.arrived}</span>{" "}
-          of {checkInStats.total} guests checked in ({checkInStats.pending} not yet
-          arrived).
+          <span className="font-medium text-emerald-700">
+            {checkInStats.arrived}
+          </span>{" "}
+          of {checkInStats.total} guests checked in ({checkInStats.pending} not
+          yet arrived).
         </p>
       ) : null}
 
@@ -457,134 +481,140 @@ export function GuestsTab({
                         }}
                       />
                     </TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Group</TableHead>
-                <TableHead>Table / Seat</TableHead>
-                <TableHead>Invitation</TableHead>
-                {canCheckIn ? <TableHead>Arrived</TableHead> : null}
-                <TableHead className={canCheckIn ? "w-32" : "w-24"}>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {guestsPage.data.map((guest) => (
-                <TableRow key={guest.id}>
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      aria-label={`Select ${guest.name}`}
-                      checked={selected.includes(guest.id)}
-                      onChange={() => toggleSelected(guest.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <p className="font-medium text-zinc-800">
-                      {guest.name}{" "}
-                      {guest.is_vip ? <Badge variant="warning">VIP</Badge> : null}
-                    </p>
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-zinc-700">{guest.phone ?? "—"}</p>
-                    <p className="text-xs text-zinc-500">{guest.email ?? ""}</p>
-                  </TableCell>
-                  <TableCell>{guest.group?.name ?? "—"}</TableCell>
-                  <TableCell>
-                    {guest.seating?.table
-                      ? `${guest.seating.table.table_name}${guest.seating.seat_number ? ` · #${guest.seating.seat_number}` : ""}`
-                      : "—"}
-                  </TableCell>
-                  <TableCell>
-                    {guest.invitation ? (
-                      <span className="font-mono text-xs text-zinc-500">
-                        {guest.invitation.invitation_code}
-                      </span>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  {canCheckIn ? (
-                    <TableCell>
-                      <button
-                        type="button"
-                        onClick={() => toggleCheckIn(guest)}
-                        disabled={setCheckIn.isPending}
-                        title={
-                          guest.checked_in_at
-                            ? `Arrived ${new Date(guest.checked_in_at).toLocaleString()} — click to undo`
-                            : "Mark as arrived"
-                        }
-                        className={cn(
-                          "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium transition-colors",
-                          guest.checked_in_at
-                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                            : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200",
-                        )}
-                      >
-                        {guest.checked_in_at ? (
-                          <CheckCircle2 className="h-3.5 w-3.5" />
+                    <TableHead>Name</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Group</TableHead>
+                    <TableHead>Table / Seat</TableHead>
+                    <TableHead>Invitation</TableHead>
+                    {canCheckIn ? <TableHead>Arrived</TableHead> : null}
+                    <TableHead className={canCheckIn ? "w-32" : "w-24"}>
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {guestsPage.data.map((guest) => (
+                    <TableRow key={guest.id}>
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${guest.name}`}
+                          checked={selected.includes(guest.id)}
+                          onChange={() => toggleSelected(guest.id)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium text-zinc-800">
+                          {guest.name}{" "}
+                          {guest.is_vip ? (
+                            <Badge variant="warning">VIP</Badge>
+                          ) : null}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-zinc-700">{guest.phone ?? "—"}</p>
+                        <p className="text-xs text-zinc-500">
+                          {guest.email ?? ""}
+                        </p>
+                      </TableCell>
+                      <TableCell>{guest.group?.name ?? "—"}</TableCell>
+                      <TableCell>
+                        {guest.seating?.table
+                          ? `${guest.seating.table.table_name}${guest.seating.seat_number ? ` · #${guest.seating.seat_number}` : ""}`
+                          : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {guest.invitation ? (
+                          <span className="font-mono text-xs text-zinc-500">
+                            {guest.invitation.invitation_code}
+                          </span>
                         ) : (
-                          <Circle className="h-3.5 w-3.5" />
+                          "—"
                         )}
-                        {guest.checked_in_at ? "Arrived" : "Mark"}
-                      </button>
-                    </TableCell>
-                  ) : null}
-                  <TableCell>
-                    <div className="flex gap-1">
+                      </TableCell>
                       {canCheckIn ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`Show check-in QR for ${guest.name}`}
-                          title="Check-in QR code"
-                          onClick={() => setQrGuest(guest)}
-                        >
-                          <QrCode className="h-4 w-4 text-zinc-600" />
-                        </Button>
+                        <TableCell>
+                          <button
+                            type="button"
+                            onClick={() => toggleCheckIn(guest)}
+                            disabled={setCheckIn.isPending}
+                            title={
+                              guest.checked_in_at
+                                ? `Arrived ${new Date(guest.checked_in_at).toLocaleString()} — click to undo`
+                                : "Mark as arrived"
+                            }
+                            className={cn(
+                              "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium transition-colors",
+                              guest.checked_in_at
+                                ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200",
+                            )}
+                          >
+                            {guest.checked_in_at ? (
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            ) : (
+                              <Circle className="h-3.5 w-3.5" />
+                            )}
+                            {guest.checked_in_at ? "Arrived" : "Mark"}
+                          </button>
+                        </TableCell>
                       ) : null}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Copy invitation link for ${guest.name}`}
-                        title="Copy personalized invitation link"
-                        onClick={() => copyInviteLink(guest)}
-                      >
-                        <Send className="h-4 w-4 text-emerald-600" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Edit ${guest.name}`}
-                        onClick={() => openEdit(guest)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Delete ${guest.name}`}
-                        onClick={async () => {
-                          if (
-                            await confirm({
-                              title: `Delete guest "${guest.name}"?`,
-                              description:
-                                "The guest and their RSVP/seating assignments will be removed.",
-                            })
-                          ) {
-                            deleteGuest.mutate(guest.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <Pagination meta={guestsPage.meta} onPageChange={setPage} />
-          </>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {canCheckIn ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Show check-in QR for ${guest.name}`}
+                              title="Check-in QR code"
+                              onClick={() => setQrGuest(guest)}
+                            >
+                              <QrCode className="h-4 w-4 text-zinc-600" />
+                            </Button>
+                          ) : null}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Copy invitation link for ${guest.name}`}
+                            title="Copy personalized invitation link"
+                            onClick={() => copyInviteLink(guest)}
+                          >
+                            <Send className="h-4 w-4 text-emerald-600" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Edit ${guest.name}`}
+                            onClick={() => openEdit(guest)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Delete ${guest.name}`}
+                            onClick={async () => {
+                              if (
+                                await confirm({
+                                  title: `Delete guest "${guest.name}"?`,
+                                  description:
+                                    "The guest and their RSVP/seating assignments will be removed.",
+                                })
+                              ) {
+                                deleteGuest.mutate(guest.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <Pagination meta={guestsPage.meta} onPageChange={setPage} />
+            </>
           );
         }}
       </QueryState>
@@ -598,7 +628,11 @@ export function GuestsTab({
         pending={createGuest.isPending || updateGuest.isPending}
         submitLabel={editing ? "Save Changes" : "Add Guest"}
       >
-        <FormField label="Name" required error={form.formState.errors.name?.message}>
+        <FormField
+          label="Name"
+          required
+          error={form.formState.errors.name?.message}
+        >
           {(field) => <Input {...field} {...form.register("name")} />}
         </FormField>
         <div className="grid grid-cols-2 gap-3">
@@ -606,7 +640,9 @@ export function GuestsTab({
             {(field) => <Input {...field} {...form.register("phone")} />}
           </FormField>
           <FormField label="Email" error={form.formState.errors.email?.message}>
-            {(field) => <Input type="email" {...field} {...form.register("email")} />}
+            {(field) => (
+              <Input type="email" {...field} {...form.register("email")} />
+            )}
           </FormField>
         </div>
         <FormField label="Address">
@@ -626,7 +662,11 @@ export function GuestsTab({
             )}
           </FormField>
           <div className="flex items-end gap-2 pb-1.5">
-            <input id="guest-vip" type="checkbox" {...form.register("is_vip")} />
+            <input
+              id="guest-vip"
+              type="checkbox"
+              {...form.register("is_vip")}
+            />
             <Label htmlFor="guest-vip">VIP guest</Label>
           </div>
         </div>
