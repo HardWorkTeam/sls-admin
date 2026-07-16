@@ -1,12 +1,14 @@
 "use client";
 
-import { CheckCircle2, HelpCircle, Users, XCircle } from "lucide-react";
+import { CheckCircle2, DollarSign, HelpCircle, TrendingDown, TrendingUp, Users, XCircle } from "lucide-react";
 import { useState } from "react";
 import { Badge, statusVariant } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageLoader } from "@/components/ui/spinner";
-import { StatCard } from "@/components/ui/stat-card";
+import { DualCurrencyValue, StatCard } from "@/components/ui/stat-card";
+import { useExpenseSummary } from "@/hooks/use-expenses";
+import { useGiftSummary } from "@/hooks/use-gifts";
 import { useChangeWeddingStatus, useWeddingDashboard } from "@/hooks/use-weddings";
 import { apiErrorMessage } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/utils";
@@ -15,6 +17,8 @@ import type { Wedding, WeddingStatus } from "@/types/api";
 
 export function OverviewTab({ wedding }: { wedding: Wedding }) {
   const { data: dashboard, isLoading } = useWeddingDashboard(wedding.id);
+  const { data: giftSummary } = useGiftSummary(wedding.id);
+  const { data: expenseSummary } = useExpenseSummary(wedding.id);
   const changeStatus = useChangeWeddingStatus(wedding.id);
   const hasRole = useAuthStore((state) => state.hasRole);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +88,61 @@ export function OverviewTab({ wedding }: { wedding: Wedding }) {
           />
         </div>
       )}
+
+      {giftSummary || expenseSummary ? (() => {
+        const incomeUsd = giftSummary?.total_cash_amount_usd ?? 0;
+        const incomeKhr = giftSummary?.total_cash_amount_khr ?? 0;
+        const expensesUsd = expenseSummary?.total_amount_usd ?? 0;
+        const expensesKhr = expenseSummary?.total_amount_khr ?? 0;
+        const netUsd = incomeUsd - expensesUsd;
+        const netKhr = incomeKhr - expensesKhr;
+        const isSurplus = netUsd >= 0 || netKhr >= 0;
+
+        return (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard
+              label="Gift Income"
+              value={
+                <DualCurrencyValue
+                  usd={incomeUsd}
+                  khr={incomeKhr}
+                  formatMoney={formatMoney}
+                />
+              }
+              icon={TrendingUp}
+              accent="emerald"
+            />
+            <StatCard
+              label="Total Expenses"
+              value={
+                <DualCurrencyValue
+                  usd={expensesUsd}
+                  khr={expensesKhr}
+                  formatMoney={formatMoney}
+                />
+              }
+              icon={TrendingDown}
+              accent="rose"
+            />
+            <div className={`flex items-center gap-4 rounded-lg border p-5 ${isSurplus ? "border-emerald-100 bg-emerald-50" : "border-rose-100 bg-rose-50"}`}>
+              <div className={`rounded-lg p-2.5 ${isSurplus ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                <DollarSign className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm text-zinc-500">Net Income</p>
+                <div className={`text-2xl font-semibold ${isSurplus ? "text-emerald-700" : "text-rose-700"}`}>
+                  <DualCurrencyValue
+                    usd={netUsd}
+                    khr={netKhr}
+                    formatMoney={formatMoney}
+                  />
+                </div>
+                <p className="text-xs text-zinc-400">{isSurplus ? "surplus" : "loss"}</p>
+              </div>
+            </div>
+          </div>
+        );
+      })() : null}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
