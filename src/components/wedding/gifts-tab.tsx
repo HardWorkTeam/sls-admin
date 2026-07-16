@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { StatCard } from "@/components/ui/stat-card";
+import { DualCurrencyValue, StatCard } from "@/components/ui/stat-card";
 import {
   DataTable,
   FormDialog,
@@ -162,12 +162,7 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
           <StatCard
             label="Total Cash"
             value={
-              [
-                summary.total_cash_amount_usd > 0 ? formatMoney(summary.total_cash_amount_usd, "USD") : null,
-                summary.total_cash_amount_khr > 0 ? formatMoney(summary.total_cash_amount_khr, "KHR") : null,
-              ]
-                .filter(Boolean)
-                .join(" | ") || "US$0.00"
+              <DualCurrencyValue usd={summary.total_cash_amount_usd} khr={summary.total_cash_amount_khr} formatMoney={formatMoney} />
             }
             accent="sky"
           />
