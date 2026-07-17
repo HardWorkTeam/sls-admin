@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { PageLoader } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
 import { useTemplates, useUpdateTemplate } from "@/hooks/use-admin";
 import { Eye, Pencil } from "lucide-react";
 import { apiErrorMessage } from "@/lib/api";

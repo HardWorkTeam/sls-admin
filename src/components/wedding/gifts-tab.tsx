@@ -1,8 +1,8 @@
 "use client";
 
 import { Gift as GiftIcon, Pencil, Plus, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useCallback, useMemo, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm-dialog";
@@ -72,7 +72,7 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
   const confirm = useConfirm();
 
   const form = useForm<GiftForm>({ defaultValues: EMPTY_FORM });
-  const watchType = form.watch("gift_type");
+  const watchType = useWatch({ control: form.control, name: "gift_type" });
 
   const openDialog = () => {
     setEditingGift(null);
@@ -81,7 +81,7 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
     setDialogOpen(true);
   };
 
-  const openEditDialog = (gift: Gift) => {
+  const openEditDialog = useCallback((gift: Gift) => {
     setError(null);
     setEditingGift(gift);
     form.reset({
@@ -93,7 +93,7 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
       note: gift.note ?? "",
     });
     setDialogOpen(true);
-  };
+  }, [form]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     setError(null);
@@ -190,7 +190,7 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
         ),
       },
     ],
-    [confirm, removeGift],
+    [confirm, openEditDialog, removeGift],
   );
 
   return (
