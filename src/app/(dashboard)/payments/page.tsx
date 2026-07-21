@@ -1,9 +1,10 @@
 "use client";
 
-import { CheckCircle2, Clock, CreditCard, Search, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, CreditCard, RotateCcw, Search, XCircle } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
@@ -52,6 +53,7 @@ export default function PaymentsPage() {
     page,
   });
   const confirm = useConfirmSubscription();
+  const confirmDialog = useConfirm();
   const counts = data?.summary?.status_counts;
 
   return (
@@ -189,6 +191,31 @@ export default function PaymentsPage() {
                           }
                         >
                           Reject
+                        </Button>
+                      </div>
+                    ) : sub.status === "paid" ? (
+                      // A paid plan is already active, so reversing it revokes the
+                      // couple's package — guard it behind a confirmation.
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={confirm.isPending}
+                          onClick={async () => {
+                            if (
+                              await confirmDialog({
+                                title: "Reverse this payment?",
+                                description: `This marks ${
+                                  sub.couple ?? sub.wedding_name ?? "the wedding"
+                                }'s payment as rejected and revokes their paid plan. Use this only to undo a mistaken confirmation.`,
+                                confirmText: "Reverse to rejected",
+                              })
+                            ) {
+                              confirm.mutate({ subscriptionId: sub.id, paid: false });
+                            }
+                          }}
+                        >
+                          <RotateCcw className="h-4 w-4" /> Reverse
                         </Button>
                       </div>
                     ) : (
