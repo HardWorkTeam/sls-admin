@@ -36,7 +36,9 @@ const STATUS_LABELS: Record<SubscriptionStatus, string> = {
 };
 
 export default function PaymentsPage() {
-  const [status, setStatus] = useState("");
+  // Default to the only actionable status so the admin lands on their work
+  // queue, not the full history. History stays one dropdown-click away.
+  const [status, setStatus] = useState("submitted");
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useSubscriptions({ status: status || undefined, page });
@@ -81,10 +83,17 @@ export default function PaymentsPage() {
       {isLoading ? (
         <PageLoader label="Loading payments..." />
       ) : !data || data.data.length === 0 ? (
-        <EmptyState
-          title="No payments yet"
-          description="Payments appear here once couples select a package and submit a payment."
-        />
+        status ? (
+          <EmptyState
+            title={`No ${STATUS_LABELS[status as SubscriptionStatus].toLowerCase()} payments`}
+            description="Nothing here right now. Switch the filter above to see other payments."
+          />
+        ) : (
+          <EmptyState
+            title="No payments yet"
+            description="Payments appear here once couples select a package and submit a payment."
+          />
+        )
       ) : (
         <>
           <Table>
