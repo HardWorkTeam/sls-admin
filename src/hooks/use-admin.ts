@@ -101,6 +101,19 @@ export function useConfirmSubscription() {
   });
 }
 
+export function useRevertSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (subscriptionId: number) => adminService.revertSubscription(subscriptionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "income"] });
+      queryClient.invalidateQueries({ queryKey: ["weddings"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({

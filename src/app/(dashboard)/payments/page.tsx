@@ -19,7 +19,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useConfirmSubscription, useSubscriptions } from "@/hooks/use-admin";
+import {
+  useConfirmSubscription,
+  useRevertSubscription,
+  useSubscriptions,
+} from "@/hooks/use-admin";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { formatDate, formatMoney } from "@/lib/utils";
 import type { SubscriptionStatus } from "@/types/api";
@@ -53,6 +57,7 @@ export default function PaymentsPage() {
     page,
   });
   const confirm = useConfirmSubscription();
+  const revert = useRevertSubscription();
   const confirmDialog = useConfirm();
   const counts = data?.summary?.status_counts;
 
@@ -194,24 +199,26 @@ export default function PaymentsPage() {
                         </Button>
                       </div>
                     ) : sub.status === "paid" ? (
-                      // A paid plan is already active, so reversing it revokes the
-                      // couple's package — guard it behind a confirmation.
+                      // A paid plan is already active, so reversing it sends the
+                      // payment back to the review queue — guard it behind a
+                      // confirmation.
                       <div className="flex justify-end">
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={confirm.isPending}
+                          disabled={revert.isPending}
                           onClick={async () => {
                             if (
                               await confirmDialog({
                                 title: "Reverse this payment?",
-                                description: `This marks ${
+                                description: `This sends ${
                                   sub.couple ?? sub.wedding_name ?? "the wedding"
-                                }'s payment as rejected and revokes their paid plan. Use this only to undo a mistaken confirmation.`,
-                                confirmText: "Reverse to rejected",
+                                }'s payment back to Awaiting confirmation so it can be re-reviewed. Use this only to undo a mistaken confirmation.`,
+                                confirmText: "Reverse to awaiting",
+                                variant: "default",
                               })
                             ) {
-                              confirm.mutate({ subscriptionId: sub.id, paid: false });
+                              revert.mutate(sub.id);
                             }
                           }}
                         >

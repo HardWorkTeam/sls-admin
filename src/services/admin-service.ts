@@ -163,4 +163,11 @@ export const adminService = {
     return data.data;
   },
 
+  async revertSubscription(subscriptionId: number): Promise<Subscription> {
+    const { data } = await api.post<{ data: Subscription }>(
+      `/admin/subscriptions/${subscriptionId}/revert`,
+    );
+    return data.data;
+  },
+
 };
