@@ -144,7 +144,7 @@ export const adminService = {
   },
 
   async subscriptions(
-    params: { status?: string; page?: number; per_page?: number } = {},
+    params: { status?: string; search?: string; page?: number; per_page?: number } = {},
   ): Promise<SubscriptionPage> {
     const { data } = await api.get<SubscriptionPage>("/admin/subscriptions", {
       params,

@@ -79,7 +79,7 @@ export function useIncomeSummary() {
 }
 
 export function useSubscriptions(
-  params: { status?: string; page?: number } = {},
+  params: { status?: string; search?: string; page?: number } = {},
 ) {
   return useQuery({
     queryKey: ["admin", "subscriptions", params],

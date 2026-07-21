@@ -1,10 +1,11 @@
 "use client";
 
-import { CheckCircle2, Clock, CreditCard, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, CreditCard, Search, XCircle } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { Select } from "@/components/ui/select";
 import { PageLoader } from "@/components/ui/spinner";
@@ -18,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useConfirmSubscription, useSubscriptions } from "@/hooks/use-admin";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { formatDate, formatMoney } from "@/lib/utils";
 import type { SubscriptionStatus } from "@/types/api";
 
@@ -39,9 +41,16 @@ export default function PaymentsPage() {
   // Default to the only actionable status so the admin lands on their work
   // queue, not the full history. History stays one dropdown-click away.
   const [status, setStatus] = useState("submitted");
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useSubscriptions({ status: status || undefined, page });
+  // Debounce so typing a wedding code doesn't fire a request per keystroke.
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const { data, isLoading } = useSubscriptions({
+    status: status || undefined,
+    search: debouncedSearch.trim() || undefined,
+    page,
+  });
   const confirm = useConfirmSubscription();
   const counts = data?.summary?.status_counts;
 
@@ -64,6 +73,18 @@ export default function PaymentsPage() {
       ) : null}
 
       <div className="flex flex-wrap gap-3">
+        <div className="relative w-full max-w-xs">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+          <Input
+            placeholder="Search wedding code..."
+            className="pl-9"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
         <Select
           className="w-56"
           value={status}
@@ -83,7 +104,12 @@ export default function PaymentsPage() {
       {isLoading ? (
         <PageLoader label="Loading payments..." />
       ) : !data || data.data.length === 0 ? (
-        status ? (
+        debouncedSearch.trim() ? (
+          <EmptyState
+            title={`No payments for "${debouncedSearch.trim()}"`}
+            description="No wedding code matches your search. Try a different code or clear the filters."
+          />
+        ) : status ? (
           <EmptyState
             title={`No ${STATUS_LABELS[status as SubscriptionStatus].toLowerCase()} payments`}
             description="Nothing here right now. Switch the filter above to see other payments."
