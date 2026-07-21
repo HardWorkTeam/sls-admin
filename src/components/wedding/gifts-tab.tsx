@@ -1,14 +1,5 @@
 "use client";
 
-import { Gift as GiftIcon, Pencil, Plus, Trash2 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useConfirm } from "@/components/ui/confirm-dialog";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { DualCurrencyValue, StatCard } from "@/components/ui/stat-card";
 import {
   DataTable,
   FormDialog,
@@ -17,6 +8,12 @@ import {
   Toolbar,
   type DataTableColumn,
 } from "@/components/kit";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { DualCurrencyValue, StatCard } from "@/components/ui/stat-card";
 import {
   useCreateGift,
   useDeleteGift,
@@ -24,10 +21,22 @@ import {
   useGiftSummary,
   useUpdateGift,
 } from "@/hooks/use-gifts";
-import { useGuests } from "@/hooks/use-guests";
+import { useCreateGuest, useGuests } from "@/hooks/use-guests";
 import { apiErrorMessage } from "@/lib/api";
-import type { Gift } from "@/types/api";
 import { formatDateTime, formatMoney } from "@/lib/utils";
+import type { Gift, Guest } from "@/types/api";
+import {
+  Check,
+  ChevronDown,
+  Gift as GiftIcon,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 
 const GIFT_TYPE_LABELS: Record<string, string> = {
   cash: "Cash",
@@ -42,6 +51,7 @@ interface GiftForm {
   currency: string;
   item_name: string;
   note: string;
+  new_guest_name: string;
 }
 
 const EMPTY_FORM: GiftForm = {
@@ -51,7 +61,150 @@ const EMPTY_FORM: GiftForm = {
   currency: "USD",
   item_name: "",
   note: "",
+  new_guest_name: "",
 };
+
+function GuestPicker({
+  id,
+  value,
+  guests,
+  onChange,
+}: {
+  id: string;
+  value: string;
+  guests: Guest[];
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const selectedGuest = guests.find((guest) => String(guest.id) === value);
+  const selectedLabel =
+    value === "new"
+      ? "+ Create new guest"
+      : (selectedGuest?.name ?? "Select or search guest...");
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const filteredGuests = normalizedQuery
+    ? guests.filter((guest) =>
+        guest.name.toLocaleLowerCase().includes(normalizedQuery),
+      )
+    : guests;
+
+  useEffect(() => {
+    if (!open) return;
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    return () =>
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+  }, [open]);
+
+  const select = (nextValue: string) => {
+    onChange(nextValue);
+    setQuery("");
+    setOpen(false);
+  };
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        id={id}
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => {
+          setOpen((current) => !current);
+          requestAnimationFrame(() => searchRef.current?.focus());
+        }}
+        className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1 text-left text-sm text-zinc-900 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+      >
+        <span className="truncate">{selectedLabel}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-zinc-500" />
+      </button>
+
+      {open ? (
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-zinc-200 bg-white p-1.5 shadow-lg">
+          <div className="relative mb-1.5">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+            <Input
+              ref={searchRef}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") setOpen(false);
+              }}
+              placeholder="Search guest by name..."
+              aria-label="Search guest by name"
+              className="pl-8"
+            />
+          </div>
+          <div
+            role="listbox"
+            className="max-h-52 overflow-y-auto overscroll-contain"
+          >
+            {!normalizedQuery ? (
+              <>
+                <GuestPickerOption
+                  label="+ Create new guest"
+                  selected={value === "new"}
+                  onClick={() => select("new")}
+                />
+                <div className="my-1 border-t border-zinc-100" />
+              </>
+            ) : null}
+
+            {filteredGuests.map((guest) => (
+              <GuestPickerOption
+                key={guest.id}
+                label={guest.name}
+                selected={value === String(guest.id)}
+                onClick={() => select(String(guest.id))}
+              />
+            ))}
+
+            {filteredGuests.length === 0 ? (
+              <p className="px-3 py-4 text-center text-sm text-zinc-500">
+                No guests found.
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function GuestPickerOption({
+  label,
+  selected,
+  onClick,
+}: {
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="option"
+      aria-selected={selected}
+      onClick={onClick}
+      className="flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm text-zinc-800 hover:bg-emerald-50"
+    >
+      <span className="truncate">{label}</span>
+      {selected ? (
+        <Check className="h-4 w-4 shrink-0 text-emerald-600" />
+      ) : null}
+    </button>
+  );
+}
 
 export function GiftsTab({ weddingId }: { weddingId: number }) {
   const [giftType, setGiftType] = useState("");
@@ -68,11 +221,13 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
   const { data: guestsPage } = useGuests(weddingId, { per_page: 200 });
   const createGift = useCreateGift(weddingId);
   const updateGift = useUpdateGift(weddingId);
+  const createGuest = useCreateGuest(weddingId);
   const { mutate: removeGift } = useDeleteGift(weddingId);
   const confirm = useConfirm();
 
   const form = useForm<GiftForm>({ defaultValues: EMPTY_FORM });
   const watchType = useWatch({ control: form.control, name: "gift_type" });
+  const watchGuestId = useWatch({ control: form.control, name: "guest_id" });
 
   const openDialog = () => {
     setEditingGift(null);
@@ -81,25 +236,44 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
     setDialogOpen(true);
   };
 
-  const openEditDialog = useCallback((gift: Gift) => {
-    setError(null);
-    setEditingGift(gift);
-    form.reset({
-      guest_id: gift.guest_id ? String(gift.guest_id) : "",
-      gift_type: gift.gift_type,
-      amount: gift.amount != null ? String(gift.amount) : "",
-      currency: gift.currency || "USD",
-      item_name: gift.item_name ?? "",
-      note: gift.note ?? "",
-    });
-    setDialogOpen(true);
-  }, [form]);
+  const openEditDialog = useCallback(
+    (gift: Gift) => {
+      setError(null);
+      setEditingGift(gift);
+      form.reset({
+        guest_id: gift.guest_id ? String(gift.guest_id) : "",
+        gift_type: gift.gift_type,
+        amount: gift.amount != null ? String(gift.amount) : "",
+        currency: gift.currency || "USD",
+        item_name: gift.item_name ?? "",
+        note: gift.note ?? "",
+        new_guest_name: "",
+      });
+      setDialogOpen(true);
+    },
+    [form],
+  );
 
   const onSubmit = form.handleSubmit(async (values) => {
     setError(null);
     try {
+      let resolvedGuestId: number | null = null;
+
+      if (values.guest_id === "new") {
+        if (!values.new_guest_name.trim()) {
+          form.setError("new_guest_name", { message: "Name is required" });
+          return;
+        }
+        const newGuest = await createGuest.mutateAsync({
+          name: values.new_guest_name.trim(),
+        });
+        resolvedGuestId = newGuest.id;
+      } else if (values.guest_id) {
+        resolvedGuestId = Number(values.guest_id);
+      }
+
       const payload = {
-        guest_id: values.guest_id ? Number(values.guest_id) : null,
+        guest_id: resolvedGuestId,
         gift_type: values.gift_type,
         amount: values.amount ? Number(values.amount) : null,
         currency: values.currency,
@@ -139,14 +313,18 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
         key: "amount",
         header: "Amount / Item",
         cell: (gift) =>
-          gift.gift_type === "item" ? (gift.item_name ?? "—") : formatMoney(gift.amount, gift.currency),
+          gift.gift_type === "item"
+            ? (gift.item_name ?? "—")
+            : formatMoney(gift.amount, gift.currency),
       },
       {
         key: "note",
         header: "Note",
         hideBelow: "md",
         className: "max-w-48",
-        cell: (gift) => <p className="truncate text-zinc-600">{gift.note ?? "—"}</p>,
+        cell: (gift) => (
+          <p className="truncate text-zinc-600">{gift.note ?? "—"}</p>
+        ),
       },
       {
         key: "received",
@@ -197,11 +375,19 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
     <div className="space-y-4">
       {summary ? (
         <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-          <StatCard label="Total Gifts" value={summary.total_gifts} icon={GiftIcon} />
+          <StatCard
+            label="Total Gifts"
+            value={summary.total_gifts}
+            icon={GiftIcon}
+          />
           <StatCard
             label="Total Cash"
             value={
-              <DualCurrencyValue usd={summary.total_cash_amount_usd} khr={summary.total_cash_amount_khr} formatMoney={formatMoney} />
+              <DualCurrencyValue
+                usd={summary.total_cash_amount_usd}
+                khr={summary.total_cash_amount_khr}
+                formatMoney={formatMoney}
+              />
             }
             accent="sky"
           />
@@ -210,7 +396,11 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
             value={`${summary.by_type.cash.count} / ${summary.by_type.bank_transfer.count}`}
             accent="amber"
           />
-          <StatCard label="Gift Items" value={summary.by_type.item.count} accent="rose" />
+          <StatCard
+            label="Gift Items"
+            value={summary.by_type.item.count}
+            accent="rose"
+          />
         </div>
       ) : null}
 
@@ -242,7 +432,8 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
         loadingLabel="Loading gifts..."
         empty={{
           title: "No gifts recorded",
-          description: "Track cash gifts, bank transfers and gift items received.",
+          description:
+            "Track cash gifts, bank transfers and gift items received.",
           action: (
             <Button onClick={openDialog}>
               <Plus className="h-4 w-4" /> Record Gift
@@ -269,21 +460,47 @@ export function GiftsTab({ weddingId }: { weddingId: number }) {
         title={editingGift ? "Edit Gift" : "Record Gift"}
         onSubmit={onSubmit}
         error={error}
-        pending={createGift.isPending || updateGift.isPending}
+        pending={
+          createGift.isPending || updateGift.isPending || createGuest.isPending
+        }
         submitLabel={editingGift ? "Save Changes" : "Save Gift"}
       >
         <FormField label="Guest">
           {(field) => (
-            <Select {...field} {...form.register("guest_id")}>
-              <option value="">Anonymous / not in list</option>
-              {(guestsPage?.data ?? []).map((guest) => (
-                <option key={guest.id} value={guest.id}>
-                  {guest.name}
-                </option>
-              ))}
-            </Select>
+            <GuestPicker
+              id={field.id}
+              value={watchGuestId}
+              guests={guestsPage?.data ?? []}
+              onChange={(value) =>
+                form.setValue("guest_id", value, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+            />
           )}
         </FormField>
+
+        {watchGuestId === "new" ? (
+          <FormField
+            label={
+              <span className="flex items-center gap-1">
+                <UserPlus className="h-3.5 w-3.5" /> New guest name
+              </span>
+            }
+            error={form.formState.errors.new_guest_name?.message}
+          >
+            {(field) => (
+              <Input
+                placeholder="Full name"
+                autoFocus
+                {...field}
+                {...form.register("new_guest_name")}
+              />
+            )}
+          </FormField>
+        ) : null}
+
         <div className="grid gap-3 sm:grid-cols-2">
           <FormField label="Type">
             {(field) => (
