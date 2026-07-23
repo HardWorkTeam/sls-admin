@@ -62,6 +62,8 @@ export interface PlanCapabilities {
   invitation_design_limit: number | null;
 }
 
+export type GatedModule = keyof PlanCapabilities["modules"];
+
 export interface Package {
   id: number;
   name: string;
@@ -103,6 +105,7 @@ export interface Wedding {
   completed_at: string | null;
   cancelled_at: string | null;
   payment_status?: SubscriptionStatus | "unpaid";
+  has_active_plan?: boolean;
   capabilities?: PlanCapabilities;
   package?: Package | null;
   created_by?: User | null;
