@@ -189,6 +189,7 @@ export function PlatformAnalytics() {
                     width={30}
                   />
                   <Tooltip
+                    cursor={{ fill: "#f4f4f5" }}
                     formatter={(value) => [Number(value), "New users"]}
                     labelFormatter={(label) => shortDay(String(label))}
                   />
@@ -233,6 +234,7 @@ export function PlatformAnalytics() {
                     width={80}
                   />
                   <Tooltip
+                    cursor={{ fill: "#f4f4f5" }}
                     formatter={(value, _name, item) => [
                       `${money(Number(value), currency)} (${(item as { payload?: { count?: number } })?.payload?.count ?? 0} sold)`,
                       "Revenue",
