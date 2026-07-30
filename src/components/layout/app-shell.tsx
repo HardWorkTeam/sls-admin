@@ -18,6 +18,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
@@ -103,10 +104,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const sidebar = (
     <>
       <div className="flex h-16 items-center gap-2 border-b border-zinc-100 px-4">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/srolanh-logo.png"
+        <Image
+          src="/srolanh-logo.webp"
           alt="Srolanh — Digital Event Management"
+          width={384}
+          height={256}
+          loading="eager"
           className="h-16 w-auto shrink-0"
         />
         <span className="text-[11px] text-zinc-500">Admin Portal</span>
@@ -190,10 +193,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-label="Open menu"
           >
             <Menu className="h-6 w-6" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/srolanh-logo.png"
+            <Image
+              src="/srolanh-logo.webp"
               alt="Srolanh Admin"
+              width={384}
+              height={256}
+              loading="eager"
               className="h-12 w-auto"
             />
           </button>
