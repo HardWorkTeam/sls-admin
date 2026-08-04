@@ -1,12 +1,9 @@
 "use client";
 
-import { Download, Eye, EyeOff, FolderPlus, Trash2, Upload, Video, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +21,18 @@ import {
 import { apiErrorMessage } from "@/lib/api";
 import { compressImage } from "@/lib/image-compress";
 import type { MediaItem } from "@/types/api";
+import {
+  Download,
+  Eye,
+  EyeOff,
+  FolderPlus,
+  Trash2,
+  Upload,
+  Video,
+  X,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 
 interface AlbumForm {
   name: string;
@@ -122,7 +131,11 @@ export function GalleryTab({ weddingId }: { weddingId: number }) {
           ))}
         </Select>
         <div className="ml-auto flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setAlbumDialog(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAlbumDialog(true)}
+          >
             <FolderPlus className="h-4 w-4" /> New Album
           </Button>
           <input
@@ -142,7 +155,8 @@ export function GalleryTab({ weddingId }: { weddingId: number }) {
             disabled={uploadMedia.isPending || !!uploadProgress}
           >
             <Upload className="h-4 w-4" />
-            {uploadProgress ?? (uploadMedia.isPending ? "Uploading..." : "Upload")}
+            {uploadProgress ??
+              (uploadMedia.isPending ? "Uploading..." : "Upload")}
           </Button>
         </div>
       </div>
@@ -186,7 +200,9 @@ export function GalleryTab({ weddingId }: { weddingId: number }) {
                     className="flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-2 bg-zinc-100 p-4 hover:bg-zinc-200"
                   >
                     <Download className="h-8 w-8 text-zinc-400" />
-                    <span className="truncate text-xs text-zinc-500 w-full text-center">{item.original_name}</span>
+                    <span className="truncate text-xs text-zinc-500 w-full text-center">
+                      {item.original_name}
+                    </span>
                   </a>
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -201,7 +217,9 @@ export function GalleryTab({ weddingId }: { weddingId: number }) {
                 {/* Touch screens have no hover, so keep the action bar visible
                     below md and only use hover-reveal on pointer devices. */}
                 <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-black/70 to-transparent p-2 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
-                  <p className="truncate text-xs text-white">{item.original_name}</p>
+                  <p className="truncate text-xs text-white">
+                    {item.original_name}
+                  </p>
                   <div className="flex gap-1">
                     <a
                       href={item.url}
@@ -216,10 +234,21 @@ export function GalleryTab({ weddingId }: { weddingId: number }) {
                     <button
                       type="button"
                       className={`rounded p-1 text-white ${item.is_public ? "bg-emerald-500/70 hover:bg-emerald-600" : "bg-white/20 hover:bg-emerald-500/70"}`}
-                      aria-label={item.is_public ? "Hide from invitation" : "Show on invitation"}
-                      title={item.is_public ? "Hide from invitation" : "Show on invitation"}
+                      aria-label={
+                        item.is_public
+                          ? "Hide from invitation"
+                          : "Show on invitation"
+                      }
+                      title={
+                        item.is_public
+                          ? "Hide from invitation"
+                          : "Show on invitation"
+                      }
                       onClick={() =>
-                        togglePublic.mutate({ mediaId: item.id, isPublic: !item.is_public })
+                        togglePublic.mutate({
+                          mediaId: item.id,
+                          isPublic: !item.is_public,
+                        })
                       }
                     >
                       {item.is_public ? (
@@ -260,23 +289,38 @@ export function GalleryTab({ weddingId }: { weddingId: number }) {
         </>
       )}
 
-      <Dialog open={albumDialog} onClose={() => setAlbumDialog(false)} title="New Album">
+      <Dialog
+        open={albumDialog}
+        onClose={() => setAlbumDialog(false)}
+        title="New Album"
+      >
         <form onSubmit={onCreateAlbum} className="space-y-3">
           <div>
             <Label htmlFor="album-name">Album name</Label>
-            <Input id="album-name" {...form.register("name", { required: true })} />
+            <Input
+              id="album-name"
+              {...form.register("name", { required: true })}
+            />
           </div>
           <div>
             <Label htmlFor="album-description">Description</Label>
             <Input id="album-description" {...form.register("description")} />
           </div>
           <div className="flex items-center gap-2">
-            <input id="album-public" type="checkbox" {...form.register("is_public")} />
+            <input
+              id="album-public"
+              type="checkbox"
+              {...form.register("is_public")}
+            />
             <Label htmlFor="album-public">Visible on public invitation</Label>
           </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setAlbumDialog(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAlbumDialog(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={createAlbum.isPending}>
@@ -312,10 +356,19 @@ export function GalleryTab({ weddingId }: { weddingId: number }) {
               onClick={(event) => event.stopPropagation()}
             />
           ) : lightbox.media_type === "document" ? (
-            <div className="flex flex-col items-center gap-4 rounded-lg bg-white p-8" onClick={(event) => event.stopPropagation()}>
+            <div
+              className="flex flex-col items-center gap-4 rounded-lg bg-white p-8"
+              onClick={(event) => event.stopPropagation()}
+            >
               <Download className="h-16 w-16 text-zinc-400" />
               <p className="text-lg font-medium">{lightbox.original_name}</p>
-              <a href={lightbox.url} download target="_blank" rel="noreferrer" className="rounded-md bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-800">
+              <a
+                href={lightbox.url}
+                download
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-md bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-800"
+              >
                 Download File
               </a>
             </div>
