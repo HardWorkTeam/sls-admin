@@ -1,13 +1,13 @@
 "use client";
 
-import { Check, Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, Pencil, Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
-import { useConfirm } from "@/components/ui/confirm-dialog";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,6 @@ import { PageLoader } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import {
   useCreatePackage,
-  useDeletePackage,
   usePackages,
   useUpdatePackage,
 } from "@/hooks/use-admin";
@@ -68,8 +67,6 @@ export default function PackagesPage() {
   const { data: packages, isLoading } = usePackages();
   const createPackage = useCreatePackage();
   const updatePackage = useUpdatePackage();
-  const deletePackage = useDeletePackage();
-  const confirm = useConfirm();
 
   const form = useForm<PackageForm>({ defaultValues: EMPTY });
 
@@ -201,24 +198,6 @@ export default function PackagesPage() {
                     onClick={() => openEdit(pkg)}
                   >
                     <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Delete package"
-                    onClick={async () => {
-                      if (
-                        await confirm({
-                          title: `Delete package "${pkg.name}"?`,
-                          description:
-                            "Weddings already on this package keep their plan; it just can't be assigned again.",
-                        })
-                      ) {
-                        deletePackage.mutate(pkg.id);
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                 </div>
               </CardHeader>
