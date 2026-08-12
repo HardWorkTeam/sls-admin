@@ -218,9 +218,16 @@ export function OverviewTab({ wedding }: { wedding: Wedding }) {
                       </p>
                       <p className="text-xs text-zinc-500">{member.user?.email}</p>
                     </div>
-                    <Badge variant={statusVariant(member.member_role)}>
-                      <span className="capitalize">{member.member_role}</span>
-                    </Badge>
+                    <div className="flex gap-2 items-center">
+                      <Badge variant={statusVariant(member.member_role)}>
+                        <span className="capitalize">{member.member_role}</span>
+                      </Badge>
+                      {member.user?.id === wedding.created_by?.id ? (
+                        <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
+                          Owner
+                        </Badge>
+                      ) : null}
+                    </div>
                   </div>
                 ))
               )}
