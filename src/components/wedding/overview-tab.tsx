@@ -9,7 +9,7 @@ import { PageLoader } from "@/components/ui/spinner";
 import { DualCurrencyValue, StatCard } from "@/components/ui/stat-card";
 import { useExpenseSummary } from "@/hooks/use-expenses";
 import { useGiftSummary } from "@/hooks/use-gifts";
-import { useChangeWeddingStatus, useWeddingDashboard } from "@/hooks/use-weddings";
+import { useChangeWeddingStatus, useWeddingDashboard, useWeddingMembers } from "@/hooks/use-weddings";
 import { apiErrorMessage } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -17,6 +17,7 @@ import type { Wedding, WeddingStatus } from "@/types/api";
 
 export function OverviewTab({ wedding }: { wedding: Wedding }) {
   const { data: dashboard, isLoading } = useWeddingDashboard(wedding.id);
+  const { data: members } = useWeddingMembers(wedding.id);
   const { data: giftSummary } = useGiftSummary(wedding.id);
   const { data: expenseSummary } = useExpenseSummary(wedding.id);
   const changeStatus = useChangeWeddingStatus(wedding.id);
@@ -204,30 +205,30 @@ export function OverviewTab({ wedding }: { wedding: Wedding }) {
               <CardTitle>Members</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {(wedding.members ?? []).length === 0 ? (
+              {(members ?? []).length === 0 ? (
                 <p className="text-sm text-zinc-500">No members added yet.</p>
               ) : (
-                (wedding.members ?? []).map((member) => (
+                (members ?? []).map((member) => (
                   <div
                     key={member.id}
                     className="flex items-center justify-between rounded-lg border border-zinc-100 px-3 py-2"
                   >
                     <div>
-                      <p className="text-sm font-medium text-zinc-800">
-                        {member.user?.name}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-zinc-800">
+                          {member.user?.name}
+                        </p>
+                        {member.user?.id === wedding.created_by?.id && (
+                          <Badge variant="outline" className="text-[10px] uppercase tracking-wider bg-zinc-50">
+                            Owner
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-xs text-zinc-500">{member.user?.email}</p>
                     </div>
-                    <div className="flex gap-2 items-center">
-                      <Badge variant={statusVariant(member.member_role)}>
-                        <span className="capitalize">{member.member_role}</span>
-                      </Badge>
-                      {member.user?.id === wedding.created_by?.id ? (
-                        <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
-                          Owner
-                        </Badge>
-                      ) : null}
-                    </div>
+                    <Badge variant={statusVariant(member.member_role)}>
+                      <span className="capitalize">{member.member_role}</span>
+                    </Badge>
                   </div>
                 ))
               )}
