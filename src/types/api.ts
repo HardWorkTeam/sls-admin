@@ -79,7 +79,7 @@ export interface Package {
 export interface WeddingMember {
   id: number;
   wedding_id: number;
-  member_role: "bride" | "groom" | "organizer";
+  member_role: "bride" | "groom" | "member";
   is_primary: boolean;
   user?: User;
 }
