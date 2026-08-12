@@ -97,6 +97,7 @@ export default function UsersPage() {
     setError(null);
     try {
       if (editing) {
+        const isEditingOwnAccount = editing.id === currentUser?.id;
         await updateUser.mutateAsync({
           userId: editing.id,
           payload: {
@@ -104,7 +105,7 @@ export default function UsersPage() {
             email: values.email,
             phone: values.phone || null,
             is_active: values.is_active,
-            roles: [values.role],
+            ...(!isEditingOwnAccount ? { roles: [values.role] } : {}),
             ...(values.password ? { password: values.password } : {}),
           },
         });
@@ -295,7 +296,11 @@ export default function UsersPage() {
             </div>
             <div>
               <Label htmlFor="user-role">Role</Label>
-              <Select id="user-role" {...form.register("role")}>
+              <Select
+                id="user-role"
+                disabled={editing?.id === currentUser?.id}
+                {...form.register("role")}
+              >
                 {(roles ?? []).map((role) => (
                   <option key={role.id} value={role.key}>
                     {role.name}
