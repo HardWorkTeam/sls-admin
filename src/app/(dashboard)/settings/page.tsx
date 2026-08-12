@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,11 +9,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { useChangePassword, useUpdateProfile } from "@/hooks/use-auth";
 import { apiErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 interface ProfileForm {
   name: string;
@@ -46,7 +46,11 @@ export default function SettingsPage() {
   });
 
   const passwordForm = useForm<PasswordForm>({
-    defaultValues: { current_password: "", password: "", password_confirmation: "" },
+    defaultValues: {
+      current_password: "",
+      password: "",
+      password_confirmation: "",
+    },
   });
 
   const onProfileSubmit = profileForm.handleSubmit(async (values) => {
@@ -78,7 +82,9 @@ export default function SettingsPage() {
     <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="text-xl font-semibold text-zinc-900">Settings</h1>
-        <p className="text-sm text-zinc-500">Manage your profile and security.</p>
+        <p className="text-sm text-zinc-500">
+          Manage your profile and security.
+        </p>
       </div>
 
       <Card>
@@ -90,7 +96,11 @@ export default function SettingsPage() {
           <form onSubmit={onProfileSubmit} className="space-y-3">
             <div>
               <Label htmlFor="profile-name">Name</Label>
-              <Input id="profile-name" {...profileForm.register("name", { required: true })} />
+              <Input
+                id="profile-name"
+                placeholder="Srolanh"
+                {...profileForm.register("name", { required: true })}
+              />
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
@@ -98,12 +108,17 @@ export default function SettingsPage() {
                 <Input
                   id="profile-email"
                   type="email"
+                  placeholder="srolanh@gmail.com"
                   {...profileForm.register("email", { required: true })}
                 />
               </div>
               <div>
                 <Label htmlFor="profile-phone">Phone</Label>
-                <Input id="profile-phone" {...profileForm.register("phone")} />
+                <Input
+                  id="profile-phone"
+                  placeholder="0123456789"
+                  {...profileForm.register("phone")}
+                />
               </div>
             </div>
             {profileMessage ? (
@@ -129,7 +144,10 @@ export default function SettingsPage() {
               <Label htmlFor="current-password">Current password</Label>
               <PasswordInput
                 id="current-password"
-                {...passwordForm.register("current_password", { required: true })}
+                placeholder="Enter current password"
+                {...passwordForm.register("current_password", {
+                  required: true,
+                })}
               />
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -137,14 +155,21 @@ export default function SettingsPage() {
                 <Label htmlFor="new-password">New password</Label>
                 <PasswordInput
                   id="new-password"
-                  {...passwordForm.register("password", { required: true, minLength: 8 })}
+                  placeholder="Enter new password"
+                  {...passwordForm.register("password", {
+                    required: true,
+                    minLength: 8,
+                  })}
                 />
               </div>
               <div>
                 <Label htmlFor="confirm-password">Confirm new password</Label>
                 <PasswordInput
                   id="confirm-password"
-                  {...passwordForm.register("password_confirmation", { required: true })}
+                  placeholder="Confirm new password"
+                  {...passwordForm.register("password_confirmation", {
+                    required: true,
+                  })}
                 />
               </div>
             </div>

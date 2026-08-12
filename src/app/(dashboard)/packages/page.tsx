@@ -230,11 +230,11 @@ export default function PackagesPage() {
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <Label htmlFor="pkg-name">Name</Label>
-            <Input id="pkg-name" {...form.register("name", { required: true })} />
+            <Input id="pkg-name" placeholder="e.g. Premium Plan" {...form.register("name", { required: true })} />
           </div>
           <div>
             <Label htmlFor="pkg-desc">Description</Label>
-            <Textarea id="pkg-desc" rows={2} {...form.register("description")} />
+            <Textarea id="pkg-desc" rows={2} placeholder="Enter package description" {...form.register("description")} />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
@@ -244,17 +244,18 @@ export default function PackagesPage() {
                 type="number"
                 step="0.01"
                 min="0"
+                placeholder="0.00"
                 {...form.register("price")}
               />
             </div>
             <div>
               <Label htmlFor="pkg-currency">Currency</Label>
-              <Input id="pkg-currency" maxLength={3} {...form.register("currency")} />
+              <Input id="pkg-currency" placeholder="USD" maxLength={3} {...form.register("currency")} />
             </div>
           </div>
           <div>
             <Label htmlFor="pkg-features">Features (one per line)</Label>
-            <Textarea id="pkg-features" rows={4} {...form.register("features")} />
+            <Textarea id="pkg-features" rows={4} placeholder={"Feature 1\\nFeature 2\\nFeature 3"} {...form.register("features")} />
             <p className="mt-1 text-xs text-zinc-400">
               Shown on the plan card. The settings below are what actually gets
               enforced.

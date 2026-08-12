@@ -1,17 +1,14 @@
 "use client";
 
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { Dialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Pagination } from "@/components/ui/pagination";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Select } from "@/components/ui/select";
 import { PageLoader } from "@/components/ui/spinner";
 import {
@@ -33,6 +30,9 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { apiErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import type { User } from "@/types/api";
+import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 interface UserForm {
   name: string;
@@ -69,7 +69,14 @@ export default function UsersPage() {
 
   const openCreate = () => {
     setEditing(null);
-    form.reset({ name: "", email: "", phone: "", password: "", role: "organizer", is_active: true });
+    form.reset({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      role: "organizer",
+      is_active: true,
+    });
     setDialogOpen(true);
   };
 
@@ -180,7 +187,9 @@ export default function UsersPage() {
             <TableBody>
               {data.data.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-medium text-zinc-800">{user.name}</TableCell>
+                  <TableCell className="font-medium text-zinc-800">
+                    {user.name}
+                  </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
@@ -243,16 +252,29 @@ export default function UsersPage() {
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <Label htmlFor="user-name">Name</Label>
-            <Input id="user-name" {...form.register("name", { required: true })} />
+            <Input
+              id="user-name"
+              placeholder="Srolanh"
+              {...form.register("name", { required: true })}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="user-email">Email</Label>
-              <Input id="user-email" type="email" {...form.register("email", { required: true })} />
+              <Input
+                id="user-email"
+                type="email"
+                placeholder="srolanh@gmail.com"
+                {...form.register("email", { required: true })}
+              />
             </div>
             <div>
               <Label htmlFor="user-phone">Phone</Label>
-              <Input id="user-phone" {...form.register("phone")} />
+              <Input
+                id="user-phone"
+                placeholder="0123456789"
+                {...form.register("phone")}
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -262,7 +284,13 @@ export default function UsersPage() {
               </Label>
               <PasswordInput
                 id="user-password"
-                {...form.register("password", { required: !editing, minLength: 8 })}
+                placeholder={
+                  editing ? "Leave blank to keep current" : "Create a password"
+                }
+                {...form.register("password", {
+                  required: !editing,
+                  minLength: 8,
+                })}
               />
             </div>
             <div>
@@ -277,15 +305,26 @@ export default function UsersPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <input id="user-active" type="checkbox" {...form.register("is_active")} />
+            <input
+              id="user-active"
+              type="checkbox"
+              {...form.register("is_active")}
+            />
             <Label htmlFor="user-active">Account active</Label>
           </div>
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={createUser.isPending || updateUser.isPending}>
+            <Button
+              type="submit"
+              disabled={createUser.isPending || updateUser.isPending}
+            >
               {editing ? "Save Changes" : "Create User"}
             </Button>
           </div>

@@ -301,7 +301,7 @@ export default function TemplatesPage() {
           </div>
           <div>
             <Label htmlFor="tpl-name">Name</Label>
-            <Input id="tpl-name" {...form.register("name", { required: true })} />
+            <Input id="tpl-name" placeholder="e.g. Royal Khmer" {...form.register("name", { required: true })} />
           </div>
           <div>
             <Label htmlFor="tpl-active">Status</Label>
