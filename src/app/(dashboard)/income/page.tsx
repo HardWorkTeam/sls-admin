@@ -38,7 +38,9 @@ export default function IncomePage() {
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useIncome({ status: status || undefined, page });
-  const { data: summary } = useIncomeSummary();
+  const { data: summary, isLoading: isSummaryLoading } = useIncomeSummary();
+
+  const loading = isLoading || isSummaryLoading;
 
   return (
     <div className="space-y-5">
@@ -63,15 +65,22 @@ export default function IncomePage() {
             icon={Receipt}
             accent="sky"
           />
-          {summary.by_package.slice(0, 2).map((pkg) => (
-            <StatCard
-              key={pkg.package_id ?? pkg.package_name}
-              label={`${pkg.package_name} (${pkg.count})`}
-              value={formatMoney(pkg.amount, summary.currency)}
-              icon={Wallet}
-              accent="amber"
-            />
-          ))}
+          {summary.by_package.map((pkg, idx) => {
+            const isFree = pkg.amount === 0;
+            return (
+              <StatCard
+                key={`${pkg.package_id ?? pkg.package_name}-${pkg.currency}-${idx}`}
+                label={pkg.package_name}
+                value={isFree
+                  ? `${pkg.count} subscription${pkg.count !== 1 ? "s" : ""}`
+                  : formatMoney(pkg.amount, pkg.currency)
+                }
+                hint={isFree ? "Free plan" : `${pkg.count} subscription${pkg.count !== 1 ? "s" : ""}`}
+                icon={Wallet}
+                accent={isFree ? "sky" : "amber"}
+              />
+            );
+          })}
         </div>
       ) : null}
 
@@ -92,7 +101,7 @@ export default function IncomePage() {
         </Select>
       </div>
 
-      {isLoading ? (
+      {loading ? (
         <PageLoader label="Loading income..." />
       ) : !data || data.data.length === 0 ? (
         <EmptyState
@@ -115,7 +124,7 @@ export default function IncomePage() {
             </TableHeader>
             <TableBody>
               {data.data.map((row) => (
-                <TableRow key={row.event_id}>
+                <TableRow key={row.id}>
                   <TableCell className="font-mono text-xs text-zinc-500">
                     {row.wedding_code}
                   </TableCell>

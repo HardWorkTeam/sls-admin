@@ -299,6 +299,7 @@ export interface Subscription {
 }
 
 export interface PlatformIncome {
+  id: number;
   event_id: number;
   wedding_code: string;
   event_name: string;
@@ -318,6 +319,7 @@ export interface PlatformIncomeSummary {
   by_package: Array<{
     package_id: number | null;
     package_name: string;
+    currency: string;
     count: number;
     amount: number;
   }>;
