@@ -220,7 +220,7 @@ export function PlatformAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" horizontal={false} />
                   <XAxis
                     type="number"
-                    tickFormatter={(v: number) => money(v, currency)}
+                    allowDecimals={false}
                     tick={{ fontSize: 12, fill: "#71717a" }}
                     tickLine={false}
                     axisLine={false}
@@ -236,11 +236,11 @@ export function PlatformAnalytics() {
                   <Tooltip
                     cursor={{ fill: "#f4f4f5" }}
                     formatter={(value, _name, item) => [
-                      `${money(Number(value), currency)} (${(item as { payload?: { count?: number } })?.payload?.count ?? 0} sold)`,
-                      "Revenue",
+                      `${Number(value)} sold (${money((item as { payload?: { amount?: number } })?.payload?.amount ?? 0, currency)})`,
+                      "Items Sold",
                     ]}
                   />
-                  <Bar dataKey="amount" radius={[0, 4, 4, 0]} maxBarSize={36}>
+                  <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={36}>
                     {charts.package_sales.map((_, index) => (
                       <Cell key={index} fill={BAR_COLORS[index % BAR_COLORS.length]} />
                     ))}
