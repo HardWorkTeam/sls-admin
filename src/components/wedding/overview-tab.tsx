@@ -1,7 +1,5 @@
 "use client";
 
-import { CheckCircle2, DollarSign, HelpCircle, TrendingDown, TrendingUp, Users, XCircle } from "lucide-react";
-import { useState } from "react";
 import { Badge, statusVariant } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,11 +7,17 @@ import { PageLoader } from "@/components/ui/spinner";
 import { DualCurrencyValue, StatCard } from "@/components/ui/stat-card";
 import { useExpenseSummary } from "@/hooks/use-expenses";
 import { useGiftSummary } from "@/hooks/use-gifts";
-import { useChangeWeddingStatus, useWeddingDashboard, useWeddingMembers } from "@/hooks/use-weddings";
+import {
+  useChangeWeddingStatus,
+  useWeddingDashboard,
+  useWeddingMembers,
+} from "@/hooks/use-weddings";
 import { apiErrorMessage } from "@/lib/api";
 import { formatDate, formatMoney } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import type { Wedding, WeddingStatus } from "@/types/api";
+import { DollarSign, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { useState } from "react";
 
 export function OverviewTab({ wedding }: { wedding: Wedding }) {
   const { data: dashboard, isLoading } = useWeddingDashboard(wedding.id);
@@ -45,12 +49,20 @@ export function OverviewTab({ wedding }: { wedding: Wedding }) {
             </Button>
           ) : null}
           {wedding.status === "published" ? (
-            <Button size="sm" variant="secondary" onClick={() => transition("completed")}>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => transition("completed")}
+            >
               Mark Completed
             </Button>
           ) : null}
           {wedding.status !== "cancelled" && wedding.status !== "completed" ? (
-            <Button size="sm" variant="destructive" onClick={() => transition("cancelled")}>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => transition("cancelled")}
+            >
               Cancel Wedding
             </Button>
           ) : null}
@@ -58,20 +70,7 @@ export function OverviewTab({ wedding }: { wedding: Wedding }) {
         </div>
       ) : null}
 
-      {isLoading || !dashboard ? (
-        <PageLoader label="Loading statistics..." />
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard
-            label="Total Guests"
-            value={dashboard.rsvp.total_guests}
-            icon={Users}
-            accent="emerald"
-          />
-        </div>
-      )}
-
-      {giftSummary || expenseSummary ? (() => {
+      {(() => {
         const incomeUsd = giftSummary?.total_cash_amount_usd ?? 0;
         const incomeKhr = giftSummary?.total_cash_amount_khr ?? 0;
         const expensesUsd = expenseSummary?.total_amount_usd ?? 0;
@@ -83,8 +82,18 @@ export function OverviewTab({ wedding }: { wedding: Wedding }) {
         const netKhr = netUsd * 4000;
         const isLoss = netUsd < 0;
 
+        if (isLoading || !dashboard) {
+          return <PageLoader label="Loading statistics..." />;
+        }
+
         return (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              label="Total Guests"
+              value={dashboard.rsvp.total_guests}
+              icon={Users}
+              accent="emerald"
+            />
             <StatCard
               label="Gift Income"
               value={
@@ -109,26 +118,36 @@ export function OverviewTab({ wedding }: { wedding: Wedding }) {
               icon={TrendingDown}
               accent="rose"
             />
-            <div className={`flex items-center gap-4 rounded-lg border p-5 ${isLoss ? "border-rose-100 bg-rose-50" : "border-emerald-100 bg-emerald-50"}`}>
-              <div className={`shrink-0 rounded-lg p-2.5 ${isLoss ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}`}>
+            <div
+              className={`flex items-center gap-4 rounded-lg border p-5 ${isLoss ? "border-rose-100 bg-rose-50" : "border-emerald-100 bg-emerald-50"}`}
+            >
+              <div
+                className={`shrink-0 rounded-lg p-2.5 ${isLoss ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}`}
+              >
                 <DollarSign className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm text-zinc-500">{isLoss ? "Net Loss" : "Net Profit"}</p>
+                <p className="text-sm text-zinc-500">
+                  {isLoss ? "Net Loss" : "Net Profit"}
+                </p>
                 <div className="flex flex-wrap items-baseline gap-x-2">
-                  <span className={`text-2xl font-semibold ${isLoss ? "text-rose-700" : "text-emerald-700"}`}>
+                  <span
+                    className={`text-2xl font-semibold ${isLoss ? "text-rose-700" : "text-emerald-700"}`}
+                  >
                     {formatMoney(netUsd, "USD")}
                   </span>
                   <span className="text-sm font-medium text-zinc-400">
                     ({formatMoney(netKhr, "KHR")})
                   </span>
                 </div>
-                <p className="text-xs text-zinc-400 mt-0.5">{isLoss ? "loss / deficit" : "surplus"}</p>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  {isLoss ? "loss / deficit" : "surplus"}
+                </p>
               </div>
             </div>
           </div>
         );
-      })() : null}
+      })()}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
@@ -144,7 +163,10 @@ export function OverviewTab({ wedding }: { wedding: Wedding }) {
               <InfoRow label="Phone" value={wedding.phone ?? "—"} />
               <InfoRow label="Email" value={wedding.email ?? "—"} />
               <InfoRow label="Ceremony" value={wedding.ceremony_venue ?? "—"} />
-              <InfoRow label="Reception" value={wedding.reception_venue ?? "—"} />
+              <InfoRow
+                label="Reception"
+                value={wedding.reception_venue ?? "—"}
+              />
               <InfoRow
                 label="Package"
                 value={
@@ -204,12 +226,17 @@ export function OverviewTab({ wedding }: { wedding: Wedding }) {
                           {member.user?.name}
                         </p>
                         {member.user?.id === wedding.created_by?.id && (
-                          <Badge variant="outline" className="text-[10px] uppercase tracking-wider bg-zinc-50">
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] uppercase tracking-wider bg-zinc-50"
+                          >
                             Owner
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-zinc-500">{member.user?.email}</p>
+                      <p className="text-xs text-zinc-500">
+                        {member.user?.email}
+                      </p>
                     </div>
                     <Badge variant={statusVariant(member.member_role)}>
                       <span className="capitalize">{member.member_role}</span>
@@ -235,16 +262,12 @@ export function OverviewTab({ wedding }: { wedding: Wedding }) {
                       className="flex items-center justify-between text-sm"
                     >
                       <span className="text-zinc-600">{group.group}</span>
-                      <span className="font-medium text-zinc-900">{group.total}</span>
+                      <span className="font-medium text-zinc-900">
+                        {group.total}
+                      </span>
                     </div>
                   ))
                 )}
-                <div className="mt-2 flex items-center justify-between border-t border-zinc-100 pt-2 text-sm">
-                  <span className="text-zinc-600">Tables / Capacity</span>
-                  <span className="font-medium text-zinc-900">
-                    {dashboard.tables.total} / {dashboard.tables.capacity} seats
-                  </span>
-                </div>
               </CardContent>
             </Card>
           ) : null}
