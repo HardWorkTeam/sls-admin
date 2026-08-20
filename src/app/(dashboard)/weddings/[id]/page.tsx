@@ -59,7 +59,7 @@ export default function WeddingDetailPage() {
   // Free-plan wedding mid-upgrade keeps its features while payment is pending.
   const isPaid = wedding.has_active_plan ?? wedding.payment_status === "paid";
   const capabilities = wedding.capabilities;
-  const isFreePackage = wedding.package != null && Number(wedding.package.price || 0) === 0;
+  const isFreePackage = wedding.package == null || Number(wedding.package.price || 0) === 0;
 
   const visibleTabs = TABS.filter((t) => {
     if (t.hideOnFree && isFreePackage) return false;
