@@ -22,16 +22,17 @@ import type { GatedModule } from "@/types/api";
 // Tab gating mirrors the couple portal (client-shell): features unlock only
 // once the wedding holds a PAID plan. `module` tabs need that module in the
 // paid package; `requiresPackage` tabs need any paid plan. Tabs with neither
-// (Overview, Invitations) always show, so an admin can still inspect a
+// (Overview) always show, so an admin can still inspect a
 // wedding that has not selected a package yet.
 const TABS: {
   value: string;
   label: string;
   module?: GatedModule;
   requiresPackage?: boolean;
+  hideOnFree?: boolean;
 }[] = [
   { value: "overview", label: "Overview" },
-  { value: "invitations", label: "Invitations" },
+  { value: "invitations", label: "Invitations", hideOnFree: true },
   { value: "guests", label: "Guests", requiresPackage: true },
   { value: "rsvp", label: "RSVP", module: "rsvp" },
   { value: "seating", label: "Seating", module: "seating" },
@@ -58,7 +59,10 @@ export default function WeddingDetailPage() {
   // Free-plan wedding mid-upgrade keeps its features while payment is pending.
   const isPaid = wedding.has_active_plan ?? wedding.payment_status === "paid";
   const capabilities = wedding.capabilities;
+  const isFreePackage = wedding.package == null || Number(wedding.package.price || 0) === 0;
+
   const visibleTabs = TABS.filter((t) => {
+    if (t.hideOnFree && isFreePackage) return false;
     if (t.module) return Boolean(capabilities?.modules[t.module]);
     if (t.requiresPackage) return isPaid;
     return true;
