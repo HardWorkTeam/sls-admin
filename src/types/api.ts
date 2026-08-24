@@ -240,6 +240,8 @@ export interface Gift {
   item_name: string | null;
   note: string | null;
   received_at: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
   guest?: Guest | null;
 }
 
@@ -248,6 +250,14 @@ export interface GiftSummary {
   total_cash_amount_usd: number;
   total_cash_amount_khr: number;
   by_type: Record<GiftType, { count: number; amount_usd: number; amount_khr: number }>;
+}
+
+export interface GiftHistory {
+  id: number;
+  action: "created" | "updated";
+  changes: Record<string, [unknown, unknown]> | null;
+  actioned_at: string | null;
+  user: { id: number; name: string } | null;
 }
 
 export type ExpenseStatus = "planned" | "partial" | "paid";
