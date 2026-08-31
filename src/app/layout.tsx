@@ -1,12 +1,12 @@
+import { ConfirmProvider } from "@/components/ui/confirm-dialog";
+import { QueryProvider } from "@/providers/query-provider";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import "./globals.css";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-import { QueryProvider } from "@/providers/query-provider";
-import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 
 export const metadata: Metadata = {
   title: "Srolanh Admin",
-  description: "Srolanh Wedding Management Platform — Admin Portal",
+  description: "Srolanh Digital Event Management — Admin Portal",
 };
 
 export default function RootLayout({
